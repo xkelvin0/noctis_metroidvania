@@ -1,0 +1,73 @@
+/* =====================================================
+   BASE — Reset global, body, canvas y utilidades
+   ===================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+body {
+  background-color: #07050a;
+  color: #e0d8e8;
+  font-family: 'Cinzel', serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#game-container {
+  position: relative;
+  border: 3px solid #4a1c24;
+  box-shadow: 0 0 30px rgba(180, 20, 40, 0.35);
+  background: #0d0914;
+  max-width: 96vw;
+  max-height: 90vh;
+}
+
+canvas#game {
+  display: block;
+  width: 960px;
+  height: 540px;
+  max-width: 94vw;
+  max-height: 85vh;
+  aspect-ratio: 16 / 9;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  font-smooth: never;
+  -webkit-font-smoothing: none;
+  transition: filter 0.3s ease;
+}
+
+canvas#game.hd-canvas {
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
+  font-smooth: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+#controls-bar {
+  display: none !important;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #9e8fb2;
+  background: #140e1d;
+  padding: 8px 16px;
+  border: 1px solid #2e1d3a;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.key {
+  background: #2b1f38;
+  color: #ffccd5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #5a3c6e;
+  font-weight: bold;
+}

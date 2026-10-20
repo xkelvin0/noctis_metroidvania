@@ -1,0 +1,424 @@
+/* =====================================================
+   PAUSE — Menú de pausa / Grimorio de Alaric
+   ===================================================== */
+#pause-menu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(8, 4, 14, 0.94);
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  z-index: 15;
+}
+
+#pause-menu.hidden {
+  display: none;
+}
+
+.pause-header {
+  text-align: center;
+}
+
+.pause-header h2 {
+  font-family: 'Cinzel', serif;
+  color: #ff0055;
+  font-size: 24px;
+  letter-spacing: 5px;
+  text-shadow: 0 0 12px rgba(255, 0, 85, 0.6);
+  margin-bottom: 2px;
+}
+
+.pause-subtitle {
+  color: #9e8fb2;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.pause-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0 10px 0;
+}
+
+.tab-btn {
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  letter-spacing: 1px;
+  background: #191024;
+  color: #c77dff;
+  border: 1px solid #4a2860;
+  padding: 5px 12px;
+  font-weight: normal;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.tab-btn:hover {
+  background: #2b1842;
+  border-color: #ff007f;
+  color: #fff;
+}
+
+.tab-btn.active {
+  background: #3c133a;
+  border-color: #ff0055;
+  color: #ffccd5;
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
+}
+
+.pause-content {
+  width: 100%;
+  max-width: 860px;
+  height: 400px;
+  background: rgba(16, 10, 26, 0.88);
+  border: 1px solid #3c2452;
+  border-radius: 6px;
+  padding: 14px 18px;
+  overflow-y: auto;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+.tab-pane {
+  display: none;
+  height: 100%;
+}
+
+.tab-pane.active {
+  display: flex;
+  flex-direction: column;
+}
+
+.pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #2e1a40;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.pane-header h3 {
+  color: #ffccd5;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.stat-badge {
+  background: #2b1233;
+  color: #ffbe0b;
+  border: 1px solid #ffbe0b;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* --- Mapa --- */
+#large-map-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #09050f;
+  border: 1px solid #281638;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+#large-map-canvas {
+  width: 760px;
+  max-width: 100%;
+  height: 280px;
+  image-rendering: pixelated;
+  cursor: default;
+}
+
+.map-room-tooltip {
+  position: absolute;
+  z-index: 4;
+  max-width: 240px;
+  padding: 8px 10px;
+  border: 1px solid #e0aaff;
+  border-radius: 4px;
+  background: rgba(9, 5, 15, 0.96);
+  color: #f6efff;
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.map-room-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.map-room-tooltip strong {
+  display: block;
+  color: #ffbe0b;
+  margin-bottom: 2px;
+}
+
+.map-legend-notes {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #9e8fb2;
+  text-align: center;
+}
+
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; vertical-align: middle; }
+.player-dot { background: #ff0055; box-shadow: 0 0 6px #ff0055; }
+.visited-dot { background: #5e548e; border: 1px solid #e0aaff; }
+.secret-dot { background: #ffbe0b; }
+.unknown-dot { background: #1a1424; border: 1px dashed #3a2e4c; }
+
+/* --- Logros --- */
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 290px;
+}
+
+.achievement-card {
+  background: #140d22;
+  border: 1px solid #3d2354;
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: 0.2s;
+}
+
+.achievement-card.unlocked {
+  border-color: #ffbe0b;
+  background: linear-gradient(135deg, #24143a 0%, #170d28 100%);
+  box-shadow: 0 0 12px rgba(255, 190, 11, 0.2);
+}
+
+.achievement-card.locked {
+  opacity: 0.45;
+  filter: grayscale(0.85);
+}
+
+.achievement-badge {
+  font-size: 26px;
+  width: 44px;
+  height: 44px;
+  background: #1e1030;
+  border: 1px solid #ffbe0b;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.achievement-info h4 { color: #ffccd5; font-size: 12px; margin-bottom: 2px; }
+.achievement-info p { color: #9e8fb2; font-size: 10px; line-height: 1.35; }
+.achievement-status { font-size: 9px; font-weight: bold; color: #ffbe0b; margin-top: 4px; }
+
+/* --- Reliquias --- */
+.relics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  height: 100%;
+  align-content: start;
+}
+
+.relic-card {
+  background: #140d20;
+  border: 1px solid #3d2354;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: 0.2s;
+}
+
+.relic-card.found {
+  border-color: #7209b7;
+  background: linear-gradient(145deg, #180e28 0%, #201035 100%);
+  box-shadow: 0 2px 10px rgba(114, 9, 183, 0.25);
+}
+
+.relic-card.locked { opacity: 0.45; filter: grayscale(0.8); }
+
+.relic-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.relic-card h4 { color: #fff; font-size: 12px; }
+.relic-card p { color: #adb5bd; font-size: 10px; line-height: 1.4; }
+.relic-card .relic-command {
+  margin-top: auto;
+  color: #ffbe0b;
+  font-size: 9px;
+  background: #261738;
+  padding: 3px 6px;
+  border-radius: 3px;
+  width: fit-content;
+}
+
+/* --- Misiones y Memorias --- */
+.quests-grid, .memories-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; overflow-y: auto; }
+.quests-grid { max-height: 145px; margin-bottom: 10px; }
+.quest-card, .memory-card { background: #140d22; border: 1px solid #3d2354; border-radius: 6px; padding: 10px; }
+.quest-card.completed, .memory-card.unlocked { border-color: #ffbe0b; background: #21152c; }
+.quest-card h4, .memory-card h4 { color: #ffccd5; font-size: 11px; margin-bottom: 4px; }
+.quest-card p, .memory-card p { color: #9e8fb2; font-size: 9px; line-height: 1.35; }
+.quest-progress { color: #ffbe0b; font-size: 9px; margin-top: 6px; }
+.memory-card.locked { opacity: .45; filter: grayscale(.8); }
+
+/* --- Bestiario --- */
+.bestiary-layout {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 14px;
+  height: 275px;
+}
+
+.bestiary-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.bestiary-btn {
+  background: #180f26;
+  border: 1px solid #361f4a;
+  color: #d8cde3;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: 0.15s;
+}
+
+.bestiary-btn:hover { background: #281740; border-color: #ff007f; }
+.bestiary-btn.active { background: #3b1138; border-color: #ff0055; color: #ffccd5; font-weight: bold; }
+
+.bestiary-detail {
+  background: #11091d;
+  border: 1px solid #2e1a3e;
+  border-radius: 6px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.monster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #261435;
+  padding-bottom: 8px;
+}
+
+.monster-habitat-tag {
+  font-size: 9.5px;
+  color: #ffbe0b;
+  background: rgba(255, 190, 11, 0.12);
+  border: 1px solid rgba(255, 190, 11, 0.4);
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.monster-avatar {
+  width: 44px;
+  height: 44px;
+  background: #1e132e;
+  border: 1px solid #ff0055;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.monster-info h4 { color: #ff0055; font-size: 14px; }
+.monster-info span { color: #9e8fb2; font-size: 10px; }
+.monster-stats { display: flex; gap: 12px; font-size: 10px; color: #ffccd5; background: #1c0e2b; padding: 4px 8px; border-radius: 4px; }
+.monster-desc { color: #c9b9db; font-size: 11px; line-height: 1.45; }
+
+.monster-weakness {
+  background: rgba(255, 0, 85, 0.1);
+  border-left: 3px solid #ff0055;
+  padding: 6px 10px;
+  border-radius: 0 4px 4px 0;
+  font-size: 10.5px;
+  color: #ffbe0b;
+}
+
+.monster-weakness strong { color: #fff; }
+
+/* --- Opciones --- */
+.options-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 300px;
+  margin: 20px auto;
+}
+
+.options-actions button {
+  background: #251638;
+  color: #ffccd5;
+  border: 1px solid #5a3c6e;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: 0.15s;
+}
+
+.options-actions button:hover { background: #3e1b38; border-color: #ff0055; color: #fff; }
+.options-actions button.danger { border-color: #800f2f; color: #ff758f; }
+.options-actions button.danger:hover { background: #590d22; border-color: #ff0055; color: #fff; }
+
+.pause-footer { margin-top: 6px; }
+
+#btn-quick-resume {
+  background: transparent;
+  color: #9e8fb2;
+  border: none;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+#btn-quick-resume:hover { color: #ffccd5; }

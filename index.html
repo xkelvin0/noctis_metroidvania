@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noctis: El Eco Carmesí</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Press+Start+2P&family=MedievalSharp&family=VT323&display=swap" rel="stylesheet">
+  <!-- CSS modular: cada archivo cubre un sistema del juego -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/title.css">
+  <link rel="stylesheet" href="css/intro.css">
+  <link rel="stylesheet" href="css/pause.css">
+  <link rel="stylesheet" href="css/shop.css">
+  <link rel="stylesheet" href="css/tutorial.css">
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="game" width="480" height="270"></canvas>
+
+    <!-- PANTALLA DE TÍTULO / MENÚ PRINCIPAL -->
+    <div id="title-screen">
+      <h1>NOCTIS</h1>
+      <p>El Eco Carmesí</p>
+      <div class="title-buttons">
+        <button id="btn-new-game">Nueva Partida</button>
+        <button id="btn-continue" class="disabled">Continuar</button>
+      </div>
+      <span class="credits">Metroidvania 2D - Prototipo Web</span>
+    </div>
+
+    <!-- NUEVO: PANTALLA DE INTRODUCCIÓN Y CINEMÁTICA CON DIÁLOGO -->
+    <div id="intro-screen" class="hidden">
+      <div class="intro-bg" style="background-image: url('images/intro_bg.jpg');"></div>
+      <div class="intro-vignette"></div>
+      
+      <div class="intro-dialog-box">
+        <div class="speaker-tag" id="intro-speaker">PRÓLOGO — CIUDADELA DE VÉSPERA</div>
+        <p class="dialog-text" id="intro-dialog-text"></p>
+        <div class="dialog-footer">
+          <span class="pulse-hint">[Espacio / Clic para avanzar]</span>
+          <button id="btn-skip-intro">Omitir (ESC)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUEVO: TIENDA DEL MERCADER DARIO (RPG HUB) -->
+    <div id="shop-modal" class="hidden">
+      <div class="shop-container">
+        <div class="shop-portrait" style="background-image: url('images/dario_portrait.jpg');"></div>
+        <div class="shop-content">
+          <div class="shop-header">
+            <h3>DARIO EL TUERTO — BAZAR DEL REFUGIO</h3>
+            <span class="shop-subtitle">«La plata ya no vale nada en Véspera, muchacho... solo la Esencia fresca.»</span>
+          </div>
+
+          <div class="shop-inventory" id="shop-items-list">
+            <!-- Items generados dinámicamente vía JS -->
+          </div>
+
+          <div class="shop-footer">
+            <div class="shop-footer-left">
+              <span class="player-essence-tag" id="shop-player-essence">♦ Tu Esencia: 0</span>
+              <span id="shop-feedback-msg" class="shop-alert-msg hidden"></span>
+            </div>
+            <button id="btn-close-shop">Cerrar Bazar (ESC / E)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE TUTORIAL Y DESBLOQUEO DE HABILIDAD -->
+    <div id="skill-tutorial-modal" class="hidden">
+      <div class="skill-tutorial-card">
+        <div class="skill-tutorial-badge" id="tut-badge">✨</div>
+        <div class="skill-tutorial-header">
+          <span class="skill-tutorial-tag">NUEVA HABILIDAD ADQUIRIDA</span>
+          <h2 id="tut-title">Nombre de la Habilidad</h2>
+        </div>
+        <div class="skill-tutorial-keys">
+          <span>Comando:</span>
+          <div id="tut-command" class="tut-key-box">TECLA</div>
+        </div>
+        <p id="tut-desc" class="skill-tutorial-desc">Descripción del movimiento y cómo usarlo.</p>
+        <div class="skill-tutorial-tip" id="tut-tip">💡 Consejo de uso en combate y exploración.</div>
+        <button id="btn-close-tutorial" class="tut-confirm-btn">ENTENDIDO (ESC / ESPACIO)</button>
+      </div>
+    </div>
+
+    <!-- NUEVO: Menú de Pausa Mejorado con Bestiario, Reliquias y Mapa -->
+    <div id="pause-menu" class="hidden">
+      <div class="pause-header">
+        <h2>NOCTIS</h2>
+        <span class="pause-subtitle">Grimorio de Alaric — Pausa</span>
+      </div>
+
+      <div class="pause-tabs">
+        <button class="tab-btn active" data-tab="tab-map">🗺️ Mapa Completo</button>
+        <button class="tab-btn" data-tab="tab-relics">🔮 Reliquias</button>
+        <button class="tab-btn" data-tab="tab-quests">✦ Misiones</button>
+        <button class="tab-btn" data-tab="tab-bestiary">📖 Bestiario</button>
+        <button class="tab-btn" data-tab="tab-achievements">🏆 Logros</button>
+        <button class="tab-btn" data-tab="tab-options">⚙️ Opciones</button>
+      </div>
+
+      <div class="pause-content">
+        <!-- Pestaña 1: Mapa Grande y Porcentaje -->
+        <div id="tab-map" class="tab-pane active">
+          <div class="pane-header">
+            <h3 id="map-title">Cartografía de Véspera</h3>
+            <span id="map-percentage" class="stat-badge">Exploración: 14%</span>
+          </div>
+          <div id="large-map-container">
+            <canvas id="large-map-canvas" width="800" height="320"></canvas>
+            <div id="map-room-tooltip" class="map-room-tooltip" role="status" aria-live="polite"></div>
+          </div>
+          <p class="map-legend-notes">
+            ◆ Actual &nbsp;|&nbsp; ⚡ Altar &nbsp;|&nbsp; 🔮 Reliquia &nbsp;|&nbsp; 👑 Jefe &nbsp;|&nbsp; ⛓ Ruta bloqueada &nbsp;|&nbsp; ? Sin descubrir
+          </p>
+        </div>
+
+        <!-- Pestaña: Logros y Desafíos Secretos -->
+        <div id="tab-achievements" class="tab-pane">
+          <div class="pane-header">
+            <h3>Hazañas del Cazador Carmesí</h3>
+            <span id="achievements-count" class="stat-badge">0 / 4 Logros</span>
+          </div>
+          <div class="achievements-grid" id="achievements-list">
+            <!-- Rellenado dinámicamente vía JS -->
+          </div>
+        </div>
+
+        <!-- Pestaña 2: Diario de Reliquias -->
+        <div id="tab-relics" class="tab-pane">
+          <div class="pane-header">
+            <h3>Tesoros y Artefactos Antiguos</h3>
+            <span id="relics-collected-count" class="stat-badge">0 / 3 Reliquias</span>
+          </div>
+          <div class="relics-grid" id="relics-list">
+            <!-- Rellenado dinámicamente vía JS -->
+          </div>
+        </div>
+
+        <div id="tab-quests" class="tab-pane">
+          <div class="pane-header">
+            <h3>Juramentos y Memorias de Malakor</h3>
+            <span id="quest-count" class="stat-badge">0 / 3 Misiones</span>
+          </div>
+          <div id="quests-list" class="quests-grid"></div>
+          <div id="memories-list" class="memories-list"></div>
+        </div>
+
+        <!-- Pestaña 3: Bestiario y Lore -->
+        <div id="tab-bestiary" class="tab-pane">
+          <div class="pane-header">
+            <h3>Monstruosidades del Eclipse</h3>
+            <span class="stat-badge">Archivos de Combate</span>
+          </div>
+          <div class="bestiary-layout">
+            <div class="bestiary-sidebar" id="bestiary-list">
+              <!-- Botones de monstruos dinámicos -->
+            </div>
+            <div class="bestiary-detail" id="bestiary-detail">
+              <!-- Detalles del monstruo seleccionado -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Pestaña 4: Opciones y Reanudar -->
+        <div id="tab-options" class="tab-pane">
+          <div class="pane-header">
+            <h3>Control de Sesión</h3>
+          </div>
+          <div class="options-actions">
+            <button id="btn-resume">▶ Reanudar Partida (ESC / P)</button>
+            <button id="btn-toggle-sound">🔊 Alternar Sonido / Música (O)</button>
+            <button id="btn-toggle-graphics">🖥️ Modo Gráfico: HD Nítido 960p (H)</button>
+            <button id="btn-restart" class="danger">💀 Reiniciar desde Último Altar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pause-footer">
+        <button id="btn-quick-resume">Reanudar (ESC)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de controles removida a petición del jugador -->
+
+  <!-- Datos estáticos del juego -->
+  <script src="js/data/bestiary.js"></script>
+  <script src="js/data/relics.js"></script>
+  <script src="js/data/quests.js"></script>
+  <script src="js/data/merchants.js"></script>
+
+  <!-- Motor del juego -->
+  <script src="js/audio.js"></script>
+  <script src="js/rooms.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/sprites.js"></script>
+
+  <!-- Módulos de interfaz -->
+  <script src="js/ui/tutorial.js"></script>
+  <script src="js/ui/pause.js"></script>
+  <script src="js/ui/shop.js"></script>
+  <script src="js/ui/intro.js"></script>
+
+  <!-- Núcleo: input, draw, game loop -->
+  <script src="js/main.js"></script>
+</body>
+</html>

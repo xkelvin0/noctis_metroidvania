@@ -1,0 +1,209 @@
+/* =====================================================
+   SHOP — Bazar del Mercader (Dario, Elena, Corvus)
+   ===================================================== */
+#shop-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(6, 3, 10, 0.92);
+  backdrop-filter: blur(8px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+#shop-modal.hidden {
+  display: none;
+}
+
+.shop-container {
+  display: flex;
+  width: 92%;
+  max-width: 880px;
+  height: 440px;
+  background: #0f081c;
+  border: 2px solid #581c87;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(147, 51, 234, 0.35), inset 0 0 25px rgba(0, 0, 0, 0.85);
+}
+
+.shop-portrait {
+  width: 270px;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  border-right: 2px solid #3b0764;
+  flex-shrink: 0;
+}
+
+.shop-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  background: rgba(18, 10, 28, 0.95);
+}
+
+.shop-header h3 {
+  color: #ffbe0b;
+  font-size: 15px;
+  letter-spacing: 1.5px;
+  margin-bottom: 2px;
+}
+
+.shop-subtitle {
+  color: #c77dff;
+  font-size: 10.5px;
+  font-style: italic;
+  display: block;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #2a1538;
+  padding-bottom: 6px;
+}
+
+.shop-inventory {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.shop-inventory::-webkit-scrollbar { width: 8px; }
+.shop-inventory::-webkit-scrollbar-track { background: #140827; border-radius: 4px; }
+.shop-inventory::-webkit-scrollbar-thumb { background: #d8b4fe; border-radius: 4px; }
+
+.shop-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1d102c;
+  border: 1px solid #3d2354;
+  border-radius: 5px;
+  padding: 8px 12px;
+  transition: 0.15s;
+}
+
+.shop-item-row:hover { border-color: #ff0055; background: #28143d; }
+
+.shop-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shop-item-icon {
+  font-size: 22px;
+  width: 34px;
+  height: 34px;
+  background: #11071c;
+  border: 1px solid #4a2862;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-item-text h4 { color: #ffccd5; font-size: 12px; }
+.shop-item-text p { color: #9e8fb2; font-size: 9.5px; }
+
+.shop-buy-btn {
+  background: #3b1138;
+  color: #ffbe0b;
+  border: 1px solid #ffbe0b;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.shop-buy-btn:hover { background: #ffbe0b; color: #0c0517; }
+
+.shop-buy-btn.bought {
+  background: #1c1424;
+  border-color: #4a3e5c;
+  color: #6c5a80;
+  cursor: default;
+}
+
+.shop-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  border-top: 1px solid #2a1538;
+  padding-top: 8px;
+}
+
+.shop-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.player-essence-tag {
+  color: #ff0055;
+  font-weight: bold;
+  font-size: 13px;
+  transition: transform 0.15s;
+}
+
+.player-essence-tag.shake {
+  animation: essenceShake 0.35s ease-in-out;
+  color: #ff3366;
+}
+
+@keyframes essenceShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.shop-alert-msg {
+  background: rgba(230, 57, 70, 0.25);
+  border: 1px solid #ff0055;
+  color: #ffccd5;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
+  animation: fadeInPulse 0.3s ease;
+}
+
+.shop-alert-msg.success {
+  background: rgba(46, 196, 182, 0.25);
+  border-color: #2ec4b6;
+  color: #cbf3f0;
+  box-shadow: 0 0 10px rgba(46, 196, 182, 0.4);
+}
+
+.shop-alert-msg.hidden { display: none; }
+
+@keyframes fadeInPulse {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+#btn-close-shop {
+  background: #2a1435;
+  color: #ffccd5;
+  border: 1px solid #5a3c6e;
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: 0.15s;
+}
+
+#btn-close-shop:hover { background: #ff0055; color: #fff; }
