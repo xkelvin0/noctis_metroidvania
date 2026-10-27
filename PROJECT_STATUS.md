@@ -191,6 +191,20 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
     - **Navegación de Grimorio con Mando**: Cambio de pestañas con LB / RB (como en consolas), botón A para aceptar/reclamar y botón B para reanudar.
     - **Vibración Háptica Dual-Rumble**: Integración de `vibrationActuator.playEffect('dual-rumble')` sincronizada con el daño sufrido, ruptura de muros frágiles, rebote de pogo e impactos de jefes. Toggle configurable en la pestaña de Opciones.
 
+19. **Transiciones Cinematográficas de Sala (Room Transition Smooth Wipe/Slide) & Auditoría**:
+    - **Duración y Curva Cinematográfica (150 ms)**:
+      - Transición de cortinilla direccional de 150 ms con curva de atenuación cúbica (*cubic ease-out*).
+      - Efecto de niebla/sombra con gradiente carmesí y púrpura oscuro (`#07030d` y `rgba(53, 20, 69, ...)`).
+    - **Sincronización de Carga a Mitad de Camino (75 ms)**:
+      - En el punto medio de la cortinilla (75 ms), con la pantalla 100% velada, se ejecuta `loadRoom(...)`, evitando cualquier parpadeo de entidades, recolocación de cámara o glitches visuales.
+    - **Direccionalidad Cardinal Completa**:
+      - El barrido se adapta a la dirección del viaje (`'right'`, `'left'`, `'up'`, `'down'`), reforzando la continuidad espacial del mapa interconectado.
+    - **Congelamiento de Entidades**:
+      - Durante los 150 ms de transición, el movimiento del jugador y la IA de los enemigos se congelan para evitar caídas o daños accidentales al cruzar puertas.
+    - **Auditoría y Corrección de Bugs Críticos**:
+      - *Bug 1 resuelto*: Se corrigió la condición de cruce por la puerta izquierda en `js/entities/player.js` (`(!doors.westUpper || player.y > 140)`), evitando que el jugador se quedase bloqueado en el aire en salas con una sola puerta oeste.
+      - *Bug 2 resuelto*: Se añadió guardia en `js/ui/pause.js` para impedir abrir el menú de pausa durante los 150 ms de cambio de sala, previniendo desincronizaciones de estado.
+
 ---
 
 ## 3. Controles Principales del Juego

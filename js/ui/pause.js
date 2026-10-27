@@ -42,6 +42,9 @@ function switchPauseTab(tabId) {
 }
 
 function togglePause(targetTab) {
+  if (typeof isRoomTransitionActive === 'function' && isRoomTransitionActive()) {
+    return;
+  }
   if (typeof isShopOpen === 'function' && isShopOpen()) {
     closeShop();
     return;

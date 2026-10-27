@@ -522,7 +522,7 @@ function updatePlayer(keys, justPressed) {
     useDoor(doors.westUpper, 'left');
     return;
   }
-  if (player.x < 6 && doors.left && player.y > 140) {
+  if (player.x < 6 && doors.left && (!doors.westUpper || player.y > 140)) {
     useDoor(doors.left, 'left');
     return;
   }
