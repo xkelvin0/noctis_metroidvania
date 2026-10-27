@@ -485,7 +485,7 @@ function updatePlayer(keys, justPressed) {
 
   // Transiciones entre habitaciones y puertas de progreso
   const doors = ROOM_DEFS[currentRoomId] ? ROOM_DEFS[currentRoomId].doors : {};
-  const useDoor = (door) => {
+  const useDoor = (door, direction) => {
     if (door.requiresAllSeals && !allSealsRestored()) {
       showBanner(`EL SANTUARIO DEL ECLIPSE EXIGE LOS 4 SELLOS (${sealCount()}/4)`, 180);
       return true;
@@ -506,32 +506,32 @@ function updatePlayer(keys, justPressed) {
       }
       return true;
     }
-    loadRoom(door.to, door.x, door.y);
+    startRoomTransition(door.to, door.x, door.y, direction);
     return true;
   };
 
   if (player.x + player.w > W - 6 && doors.eastUpper && player.y <= 140) {
-    useDoor(doors.eastUpper);
+    useDoor(doors.eastUpper, 'right');
     return;
   }
   if (player.x + player.w > W - 6 && doors.right) {
-    useDoor(doors.right);
+    useDoor(doors.right, 'right');
     return;
   }
   if (player.x < 6 && doors.westUpper && player.y <= 140) {
-    useDoor(doors.westUpper);
+    useDoor(doors.westUpper, 'left');
     return;
   }
   if (player.x < 6 && doors.left && player.y > 140) {
-    useDoor(doors.left);
+    useDoor(doors.left, 'left');
     return;
   }
   if (player.y < 10 && doors.up) {
-    useDoor(doors.up);
+    useDoor(doors.up, 'up');
     return;
   }
   if (player.y + player.h > H - 10 && doors.down) {
-    useDoor(doors.down);
+    useDoor(doors.down, 'down');
     return;
   }
 
@@ -818,4 +818,3 @@ function updatePlayer(keys, justPressed) {
     }
   }
 }
-

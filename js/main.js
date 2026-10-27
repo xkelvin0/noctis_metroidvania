@@ -72,6 +72,7 @@ function draw() {
   drawGothicMinimap(ctx);
   drawGothicBanner(ctx);
   drawFpsCounter(ctx, currentFps);
+  drawRoomTransition(ctx);
 
   ctx.restore();
 }
@@ -111,7 +112,9 @@ function loop(currentTime) {
     }
 
     if (gameStarted && !isPaused && (typeof isTutorialOpen === 'undefined' || !isTutorialOpen) && !gameWon) {
-      if (hitStopTimer > 0) {
+      if (isRoomTransitionActive()) {
+        updateRoomTransition(FIXED_STEP);
+      } else if (hitStopTimer > 0) {
         hitStopTimer--;
       } else {
         updatePlayer(keys, justPressed);

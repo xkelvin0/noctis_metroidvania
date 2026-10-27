@@ -234,3 +234,58 @@ function drawWorld(ctx) {
   drawGothicVignette(ctx);
 }
 
+function drawRoomTransition(ctx) {
+  if (!roomTransition.active) return;
+
+  const progress = Math.min(1, roomTransition.elapsed / ROOM_TRANSITION_DURATION);
+  const phase = progress <= 0.5 ? progress * 2 : (1 - progress) * 2;
+  const eased = 1 - Math.pow(1 - Math.max(0, phase), 3);
+  const horizontal = roomTransition.direction === 'left' || roomTransition.direction === 'right';
+  const dimension = horizontal ? W : H;
+  const coverage = Math.ceil(dimension * eased);
+  const fogSize = horizontal ? 54 : 42;
+  const fogAlpha = Math.min(1, coverage / fogSize);
+
+  ctx.save();
+  ctx.fillStyle = '#07030d';
+
+  if (roomTransition.direction === 'right') {
+    const edge = W - coverage;
+    ctx.fillRect(edge, 0, coverage, H);
+    const fog = ctx.createLinearGradient(edge - fogSize, 0, edge + 4, 0);
+    fog.addColorStop(0, 'rgba(20, 8, 30, 0)');
+    fog.addColorStop(0.55, `rgba(53, 20, 69, ${0.5 * fogAlpha})`);
+    fog.addColorStop(1, `rgba(7, 3, 13, ${fogAlpha})`);
+    ctx.fillStyle = fog;
+    ctx.fillRect(Math.max(0, edge - fogSize), 0, fogSize + 4, H);
+  } else if (roomTransition.direction === 'left') {
+    const edge = coverage;
+    ctx.fillRect(0, 0, coverage, H);
+    const fog = ctx.createLinearGradient(edge - 4, 0, edge + fogSize, 0);
+    fog.addColorStop(0, `rgba(7, 3, 13, ${fogAlpha})`);
+    fog.addColorStop(0.45, `rgba(53, 20, 69, ${0.5 * fogAlpha})`);
+    fog.addColorStop(1, 'rgba(20, 8, 30, 0)');
+    ctx.fillStyle = fog;
+    ctx.fillRect(edge - 4, 0, Math.min(fogSize + 4, W - edge + 4), H);
+  } else if (roomTransition.direction === 'down') {
+    const edge = H - coverage;
+    ctx.fillRect(0, edge, W, coverage);
+    const fog = ctx.createLinearGradient(0, edge - fogSize, 0, edge + 4);
+    fog.addColorStop(0, 'rgba(20, 8, 30, 0)');
+    fog.addColorStop(0.55, `rgba(53, 20, 69, ${0.5 * fogAlpha})`);
+    fog.addColorStop(1, `rgba(7, 3, 13, ${fogAlpha})`);
+    ctx.fillStyle = fog;
+    ctx.fillRect(0, Math.max(0, edge - fogSize), W, fogSize + 4);
+  } else {
+    const edge = coverage;
+    ctx.fillRect(0, 0, W, coverage);
+    const fog = ctx.createLinearGradient(0, edge - 4, 0, edge + fogSize);
+    fog.addColorStop(0, `rgba(7, 3, 13, ${fogAlpha})`);
+    fog.addColorStop(0.45, `rgba(53, 20, 69, ${0.5 * fogAlpha})`);
+    fog.addColorStop(1, 'rgba(20, 8, 30, 0)');
+    ctx.fillStyle = fog;
+    ctx.fillRect(0, edge - 4, W, Math.min(fogSize + 4, H - edge + 4));
+  }
+
+  ctx.restore();
+}
