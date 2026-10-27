@@ -181,9 +181,10 @@ ROOM_DEFS[15].doors = { left: { to: 50, x: 430, y: 200 }, right: { to: 401, x: 3
 
 ROOM_DEFS[9].doors = {
   left: { to: 108, x: 430, y: 200 },
-  eastUpper: { to: 41, x: 30, y: 120, requiresAbility: 'hasDash', requiresLabel: 'DASH SOMBRÍO' }
+  right: { to: 41, x: 30, y: 200 },
+  westUpper: { to: 34, x: 430, y: 120 }
 };
-ROOM_DEFS[41].doors = { westUpper: { to: 9, x: 430, y: 120 }, right: { to: 42, x: 30, y: 200 } };
+ROOM_DEFS[41].doors = { left: { to: 9, x: 430, y: 200 }, right: { to: 42, x: 30, y: 200 } };
 for (let id = 42; id <= 44; id++) {
   ROOM_DEFS[id].doors = { left: { to: id - 1, x: 430, y: 200 }, right: { to: id + 1, x: 30, y: 200 } };
 }

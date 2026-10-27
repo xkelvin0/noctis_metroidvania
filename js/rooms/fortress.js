@@ -273,32 +273,33 @@ ROOM_DEFS[9] = {
   name: "Enclave Subterráneo: Pabellón de los Juramentados",
   gridX: 0, gridY: 3,
   doors: {
-    left:  { to: 11, x: 430, y: 200, requiresAbility: 'hasDash', requiresLabel: 'DASH SOMBRÍO' },
-    right: { to: 7, x: 30, y: 200 }
+    left:      { to: 108, x: 430, y: 200 },
+    right:     { to: 41,  x: 30,  y: 200 },
+    westUpper: { to: 34,  x: 430, y: 120 }
   },
   map: [
     "##############################",
+    "#......#..............#......#",
+    "#......#.....====.....#......#",
     "#............................#",
+    "#..====................====..#",
+    "#......#..............#......#",
+    "#......#...========...#......#",
     "#............................#",
-    "#............................#",
-    "#............................#",
-    "#............................#",
-    "#............................#",
-    "#............................#",
-    "#............................#",
-    "#............................#",
-    "#............................#",
+    "#...====..............====...#",
+    "#......#..............#......#",
+    "#......#..............#......#",
     "#............................#",
     "#............................#",
     "<............................>",
-    "<..F...L...W......H...S..L...>",
+    "<..L...T....S......L.........>",
     "##############################",
     "##############################"
   ],
   spawns: [
-    { type: 'citizen', x: 140, y: 200, name: "Capitán Vane", dir: 1, dialog: "«Somos los Juramentados. Bajo estas catacumbas la mente de Malakor no puede tocarnos.»" },
-    { type: 'citizen', x: 260, y: 200, name: "Alquimista Umbrío", dir: -1, dialog: "«En las aguas de la cripta destilo el elixir contra el veneno carmesí.»" },
-    { type: 'citizen', x: 390, y: 200, name: "Escudero Renal", dir: 1, dialog: "«El Altar de aquí aún brilla. Descansa tus armas antes de subir a la fortaleza.»" }
+    { type: 'citizen', x: 80,  y: 200, name: "Capitán Vane", dir: 1, dialog: "«Somos los Juramentados. Bajo estas catacumbas la mente de Malakor no puede tocarnos.»" },
+    { type: 'citizen', x: 260, y: 200, name: "Alquimista Umbrío", dir: -1, dialog: "«En las aguas de la cripta destilo el elixir contra el veneno carmesí. Avanza a las catacumbas hacia el este.»" },
+    { type: 'citizen', x: 380, y: 200, name: "Escudero Renal", dir: 1, dialog: "«El Altar del Enclave aún arde con fuego puro. Descansa tus armas antes de adentrarte en el Osario de la Sal.»" }
   ]
 };
 

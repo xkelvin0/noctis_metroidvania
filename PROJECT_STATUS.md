@@ -247,6 +247,17 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
       - *Capa Astral* (Sello Astral): Azul cósmico con estrellas titilantes dinámicas sobre la tela y estela de polvo estelar al correr o hacer Dash.
       - Selector interactivo en la pestaña de Opciones (`🧣 Capa Cosmética: [Cambiar]`) y auto-equipamiento al purificar cada sello.
 
+22. **Rediseño Temático del Enclave Subterráneo y Corrección de Puertas**:
+    - **Apertura de Progresión hacia las Catacumbas**:
+      - Configurada la puerta este (`doors.right`) en la Sala 09 a `y: 200` conectando fluidamente con la Sala 41 (Túnel de Sal del Acceso del Juramento) y bidireccionalmente de regreso.
+      - Acceso superior (`westUpper`) al Laboratorio Umbrío (Sala 34) y Pozo de los Juramentos (Sala 35).
+    - **Arquitectura Subterránea Auténtica**:
+      - Eliminados todos los elementos de superficie copiados de la Villa (cabañas de Greta `H`, fragua `F` y pozos de aldea `W`).
+      - Implementadas columnas góticas de piedra tallada, andamios y plataformas de madera elevadas (`====`), faroles de cripta (`L`), crisol/portal arcano (`T`) y Altar sagrado (`S`) nivelado al ras del suelo.
+    - **Plataformeo en Sendero de Ceniza (Salas 105 y 106)**:
+      - Sala 105: Reposicionados los descansillos de entrada y salida a nivel de puerta para evitar caídas forzadas al foso de pinchos sin posibilidad de retorno.
+      - Sala 106: Altar de guardado alineado exactamente al ras del piso de losas.
+
 ---
 
 ## 3. Controles Principales del Juego
