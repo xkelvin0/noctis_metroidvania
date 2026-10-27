@@ -137,7 +137,7 @@ function drawWorld(ctx) {
   const pRow = Math.floor((player.y + player.h / 2) / TILE);
   const pFoot = Math.floor((player.y + player.h - 1) / TILE);
 
-  const isAtAltarTile = getTileAt(pCol, pRow) === 'S' || getTileAt(pCol, pFoot) === 'S';
+  const isAtAltarTile = getTileAt(pCol, pRow) === 'S' || getTileAt(pCol, pFoot) === 'S' || getTileAt(pCol, pFoot - 1) === 'S';
   const isAtMirrorTile = getTileAt(pCol, pRow) === 'T' || getTileAt(pCol, pFoot) === 'T';
 
   let nearbyCitizen = null;

@@ -63,7 +63,16 @@ function drawWallClawMarks(ctx, tx, ty, side = 'left') {
 function drawSaveAltarSprite(ctx, x, y, animClock) {
   const ax = Math.round(x);
   const ay = Math.round(y);
-  const floorY = ay + 16; // Nivel exacto del suelo sólido
+  
+  // Buscar el nivel del suelo sólido más cercano debajo del altar para posarlo siempre al ras
+  const col = Math.floor(ax / 16);
+  let row = Math.floor(ay / 16);
+  if (typeof getTileAt === 'function') {
+    while (row < 14 && getTileAt(col, row + 1) === '.') {
+      row++;
+    }
+  }
+  const floorY = (row + 1) * 16; // Nivel exacto del suelo sólido
 
   if (saveAltarLoaded) {
     const drawW = 42;
@@ -81,7 +90,7 @@ function drawSaveAltarSprite(ctx, x, y, animClock) {
 
   // Respaldo
   ctx.fillStyle = '#ffbe0b';
-  ctx.fillRect(ax + 5, ay - 6, 6, 12);
+  ctx.fillRect(ax + 5, floorY - 16, 6, 12);
 }
 
 // Puesto / Tienda de Campaña del Mercader Dario ('M')

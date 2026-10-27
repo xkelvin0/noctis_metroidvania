@@ -347,7 +347,7 @@ function updatePlayer(keys, justPressed) {
   }
 
   // Interacción con el Altar: E (Guardar/Curar), 1 (Mejorar Vida), 2 (Mejorar Espada)
-  const isAtAltar = (getTileAt(cx, cy) === 'S' || getTileAt(cx, footRow) === 'S');
+  const isAtAltar = (getTileAt(cx, cy) === 'S' || getTileAt(cx, footRow) === 'S' || getTileAt(cx, footRow - 1) === 'S');
   if (isAtAltar) {
     const hpCost = 30 + player.hpUpgrades * 25;
     const atkCost = 40 + player.atkUpgrades * 30;
