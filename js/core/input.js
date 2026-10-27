@@ -126,3 +126,4 @@ window.addEventListener('focus', resetInputAndTiming);
 document.addEventListener('visibilitychange', () => {
   resetInputAndTiming();
 });
+

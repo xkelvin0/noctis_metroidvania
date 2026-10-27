@@ -130,3 +130,4 @@ if (btnContinue) {
     setBgmMode('explore');
   });
 }
+

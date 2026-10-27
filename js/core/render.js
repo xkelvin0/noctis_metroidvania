@@ -229,3 +229,4 @@ function drawWorld(ctx) {
   // Viñeta gótica
   drawGothicVignette(ctx);
 }
+

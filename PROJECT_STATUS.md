@@ -160,6 +160,16 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
       - `js/core/save.js` (132 líneas): Gestión de la pantalla de inicio, inicio de nueva partida con reseteo de estadísticas y restauración de partida guardada desde `localStorage`.
       - `js/main.js` (125 líneas): Núcleo orquestador ultra liviano; gestión de resolución HD 960p / Retro Pixel 480p, composición de capas en `draw()` y bucle de paso fijo (`loop`) a 60 FPS con timestep acumulativo.
 
+16. **Modularización del Menú de Pausa y Grimorio (`js/ui/pause/`)**:
+    - Se refactorizó `js/ui/pause.js` (572 líneas) dividiéndolo en submódulos por pestaña y responsabilidad:
+      - `js/ui/pause/map.js` (220 líneas): Renderizado del Gran Mapa (`renderLargeMap`), leyenda de candados de habilidades, estadísticas regionales (`getRegionStats`), marcador de objetivo y tooltips interactivos de sala.
+      - `js/ui/pause/relics.js` (65 líneas): Panel de reliquias descubiertas, resumen de materiales, equipamiento de ranuras de amuletos y mejoras del Árbol de Magia.
+      - `js/ui/pause/bestiary.js` (37 líneas): Selector lateral de monstruos, estadísticas de combate, debilidades tácticas y hábitat.
+      - `js/ui/pause/quests.js` (88 líneas): Registro de misiones interactivas con reclamo de recompensas, barras de progreso y memorias del eclipse selladas.
+      - `js/ui/pause/options.js` (105 líneas): Ajustes de volumen, reasignación de teclas (`captureBinding`), dificultad, efectos de vibración/destellos y alternancia de gráficos.
+      - `js/ui/pause.js` (110 líneas): Coordinador maestro de pestañas, alternancia de pausa `togglePause`, reinicio y guardado manual.
+    - Integrado en `index.html` y verificado al 100% en Node.js VM.
+
 ---
 
 ## 3. Controles Principales del Juego

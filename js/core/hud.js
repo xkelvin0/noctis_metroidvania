@@ -161,3 +161,4 @@ function drawFpsCounter(ctx, currentFps) {
   ctx.fillText(fpsText, fpsX + 4, fpsY + 10);
   ctx.restore();
 }
+
