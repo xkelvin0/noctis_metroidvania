@@ -176,17 +176,45 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
     - **Destello de Impacto Puro (*Hit Flash*)**: Cuando cualquier monstruo o jefe recibe un impacto, su silueta se tiñe de blanco puro radiante durante los primeros 3 frames de daño (`hurtTimer >= 9`), otorgando una sensación de impacto contundente e instantáneo.
     - **Física de Retroceso y Clang Sonoro**: Alaric experimenta un ligero retroceso mutuo al impactar con la espada para aportar peso al golpe; implementado efecto sonoro sintetizado `pogo_hit` con doble resonancia metálica al rebotar sobre enemigos o pinchos.
 
+18. **Soporte Completo para Mandos (Gamepad API & Háptica Dual-Rumble)**:
+    - **Detección Automática de Mandos**: Escucha global de eventos `gamepadconnected` y `gamepaddisconnected` con banners contextuales en pantalla.
+    - **Mapeo Estándar (Xbox, PlayStation, Nintendo Switch)**:
+      - Stick Analógico Izquierdo / Cruceta D-Pad: Movimiento horizontal y agacharse.
+      - Botón A / Cruz (0): Salto y doble salto.
+      - Botón X / Cuadrado (2): Ataque con espada.
+      - Botón RB / R1 (5) o Gatillo LT / L2 (6): Dash Sombrío.
+      - Botón B / Círculo (1) o Gatillo RT / R2 (7): Hechizo de sangre / disparo arcano.
+      - Botón Y / Triángulo (3): Interactuar con aldeanos, tiendas y consagrar altares.
+      - Botón LB / L1 (4): Gancho espectral.
+      - Botón Select / Back / Share (8): Acceso directo al Mapa Grande.
+      - Botón Start / Menu (9): Menú de Pausa / Grimorio.
+    - **Navegación de Grimorio con Mando**: Cambio de pestañas con LB / RB (como en consolas), botón A para aceptar/reclamar y botón B para reanudar.
+    - **Vibración Háptica Dual-Rumble**: Integración de `vibrationActuator.playEffect('dual-rumble')` sincronizada con el daño sufrido, ruptura de muros frágiles, rebote de pogo e impactos de jefes. Toggle configurable en la pestaña de Opciones.
+
 ---
 
 ## 3. Controles Principales del Juego
-- **A / D** o **Flechas Izquierda / Derecha**: Moverse
-- **W / Espacio / Flecha Arriba**: Saltar (Doble salto si se tiene la reliquia / Salto en pared pegado al muro)
-- **J / Clic Izquierdo**: Atacar con la espada (Pogo jump si se ataca hacia abajo en el aire)
-- **K / Clic Derecho / Shift**: Dash sombrío (atraviesa enemigos y barreras sombrías B)
-- **E**: Interactuar (hablar con aldeanos/guardias, abrir tiendas, consagrar altar y guardar partida)
-- **P / ESC**: Menú de pausa / Grimorio (Mapa grande, Reliquias, Misiones interactivas con reclamo de recompensas, Bestiario, Opciones)
-- **H**: Alternar Modo Gráfico (HD Nítido 960p vs Retro Pixel 480p)
-- **O**: Silenciar / Activar Música
+- **Teclado / Ratón**:
+  - **A / D** o **Flechas**: Moverse
+  - **W / Espacio**: Saltar (Doble salto / Salto en pared)
+  - **J / Clic Izquierdo**: Atacar con la espada (Pogo jump si se ataca hacia abajo en el aire)
+  - **K / Clic Derecho / Shift**: Dash sombrío
+  - **E**: Interactuar (hablar, tiendas, guardar partida en altares)
+  - **P / ESC**: Menú de pausa / Grimorio
+  - **M / K / N / L**: Atajos directos a Mapa, Bestiario, Reliquias y Misiones
+  - **H**: Alternar Modo Gráfico (HD 960p vs Retro Pixel 480p)
+  - **O**: Silenciar / Activar Música
+- **Mando (Xbox / PlayStation / Switch)**:
+  - **Stick Izquierdo / Cruceta**: Moverse / Agacharse
+  - **Botón A / Cruz**: Saltar
+  - **Botón X / Cuadrado**: Atacar
+  - **Botón RB / R1 o Gatillo LT**: Dash Sombrío
+  - **Botón B / Círculo o Gatillo RT**: Hechizo
+  - **Botón Y / Triángulo**: Interactuar
+  - **Botón LB / L1**: Gancho
+  - **Start**: Menú de Pausa
+  - **Back / Select**: Gran Mapa
+  - **LB / RB en Pausa**: Navegar pestañas del Grimorio
 
 ---
 

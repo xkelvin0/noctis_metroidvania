@@ -30,6 +30,12 @@ function triggerShake(duration, magnitude) {
   if (typeof gameSettings !== 'undefined' && gameSettings.screenShake === false) return;
   screenShakeTimer = duration;
   shakeMagnitude = magnitude;
+
+  // Vibración háptica en mandos si está conectado (Rumble)
+  if (typeof triggerGamepadRumble === 'function') {
+    const intensity = Math.min(1.0, Math.max(0.2, magnitude / 6));
+    triggerGamepadRumble(duration * 16.6, intensity * 0.7, intensity);
+  }
 }
 
 // Congelamiento momentáneo de frames para impacto visceral (HitStop)

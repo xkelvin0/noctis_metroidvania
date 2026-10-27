@@ -106,6 +106,10 @@ function loop(currentTime) {
   if (accumulator > 100) accumulator = 100;
 
   while (accumulator >= FIXED_STEP) {
+    if (typeof pollGamepadInput === 'function') {
+      pollGamepadInput();
+    }
+
     if (gameStarted && !isPaused && (typeof isTutorialOpen === 'undefined' || !isTutorialOpen) && !gameWon) {
       if (hitStopTimer > 0) {
         hitStopTimer--;

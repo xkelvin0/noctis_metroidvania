@@ -18,6 +18,7 @@ const btnRebindTravel = document.getElementById('btn-rebind-travel');
 const difficultySelect = document.getElementById('difficulty-select');
 const toggleShake = document.getElementById('toggle-shake');
 const toggleFlashes = document.getElementById('toggle-flashes');
+const toggleRumble = document.getElementById('toggle-rumble');
 const btnToggleSound = document.getElementById('btn-toggle-sound');
 const btnToggleObjective = document.getElementById('btn-toggle-objective');
 const btnToggleGraphics = document.getElementById('btn-toggle-graphics');
@@ -30,6 +31,7 @@ function syncAudioOptions() {
   if (difficultySelect) difficultySelect.value = gameSettings.difficulty || 'normal';
   if (toggleShake) toggleShake.checked = gameSettings.screenShake !== false;
   if (toggleFlashes) toggleFlashes.checked = gameSettings.flashes !== false;
+  if (toggleRumble) toggleRumble.checked = gameSettings.gamepadRumble !== false;
   const bindings = [
     [btnRebindJump, 'jumpKey', 'SALTO', ' '], [btnRebindDash, 'dashKey', 'DASH', 'shift'], [btnRebindAttack, 'attackKey', 'ATAQUE', 'mouseLeft'],
     [btnRebindLeft, 'leftKey', 'MOVIMIENTO IZQUIERDA', 'a'], [btnRebindRight, 'rightKey', 'MOVIMIENTO DERECHA', 'd'],
@@ -103,4 +105,5 @@ if (btnRebindTravel) btnRebindTravel.addEventListener('click', () => captureBind
 if (difficultySelect) difficultySelect.addEventListener('change', () => { gameSettings.difficulty = difficultySelect.value; saveProgress(); });
 if (toggleShake) toggleShake.addEventListener('change', () => { gameSettings.screenShake = toggleShake.checked; saveProgress(); });
 if (toggleFlashes) toggleFlashes.addEventListener('change', () => { gameSettings.flashes = toggleFlashes.checked; saveProgress(); });
+if (toggleRumble) toggleRumble.addEventListener('change', () => { gameSettings.gamepadRumble = toggleRumble.checked; saveProgress(); if (gameSettings.gamepadRumble && typeof triggerGamepadRumble === 'function') triggerGamepadRumble(200, 0.5, 0.7); });
 
