@@ -152,6 +152,14 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
       - `js/entities.js` (438 líneas): Estado global del mundo (`currentRoomId`, `materials`, `seals`, `storyProgress`), datos y memorias de jefes, banners de texto y diálogos con paginación, guardado en `localStorage` y la función central `loadRoom`.
     - Integrado en `index.html` y validado al 100% mediante suite de tests en Node.js VM.
 
+15. **Modularización del Núcleo de Ejecución y Motor (`js/core/` y `js/main.js`)**:
+    - Se extrajeron y modularizaron las 713 líneas de `js/main.js` en una arquitectura limpia dentro de `js/core/`:
+      - `js/core/input.js` (128 líneas): Gestión de buffers de entrada `keys` y `justPressed`, listeners de ratón, atajos del grimorio (M, K, N, L, O, H, ESC) y control de pérdida de foco (`resetInputAndTiming`).
+      - `js/core/hud.js` (163 líneas): Renderizado del HUD gótico con gradientes de vida dinámica, orbes de esencia, poder de ataque, sellos del eclipse, minimapa dinámico en tiempo real, banners con retratos de NPCs y diálogo paginado, y widget medidor de FPS.
+      - `js/core/render.js` (231 líneas): Renderizado completo de escena (`drawWorld`): fondos atmosféricos y partículas de niebla, tilemap completo de salas y ciudades, orbes, reliquias, prompts de interacción contextuales, enemigos, proyectiles, jugador y viñeta gótica.
+      - `js/core/save.js` (132 líneas): Gestión de la pantalla de inicio, inicio de nueva partida con reseteo de estadísticas y restauración de partida guardada desde `localStorage`.
+      - `js/main.js` (125 líneas): Núcleo orquestador ultra liviano; gestión de resolución HD 960p / Retro Pixel 480p, composición de capas en `draw()` y bucle de paso fijo (`loop`) a 60 FPS con timestep acumulativo.
+
 ---
 
 ## 3. Controles Principales del Juego
