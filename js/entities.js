@@ -25,6 +25,14 @@ let hitStopTimer = 0;
 let respawnFrames = 0;
 let arrivalPromptLocked = false;
 let arrivalGuideBeacon = false;
+const ROOM_TRANSITION_DURATION = 150;
+let roomTransition = {
+  active: false,
+  elapsed: 0,
+  switched: false,
+  direction: 'right',
+  destination: null
+};
 let lastAltarRoom = -2;
 let lastAltarX = 150;
 let lastAltarY = 200;
@@ -103,6 +111,41 @@ const BOSS_ATTACK_ORDERS = {
 };
 let purchasedMaps = {};
 let gameSettings = { showObjectiveMarker: true, leftKey: 'a', rightKey: 'd', downKey: 's', castKey: 'q', hookKey: 'f', interactKey: 'e', travelKey: 't' };
+
+function isRoomTransitionActive() {
+  return roomTransition.active;
+}
+
+function startRoomTransition(id, spawnX, spawnY, direction = 'right') {
+  if (roomTransition.active || !ROOM_DEFS[id]) return false;
+
+  player.vx = 0;
+  player.vy = 0;
+  roomTransition = {
+    active: true,
+    elapsed: 0,
+    switched: false,
+    direction,
+    destination: { id, spawnX, spawnY }
+  };
+  return true;
+}
+
+function updateRoomTransition(deltaMs) {
+  if (!roomTransition.active) return;
+
+  roomTransition.elapsed = Math.min(ROOM_TRANSITION_DURATION, roomTransition.elapsed + deltaMs);
+  if (!roomTransition.switched && roomTransition.elapsed >= ROOM_TRANSITION_DURATION / 2) {
+    const { id, spawnX, spawnY } = roomTransition.destination;
+    loadRoom(id, spawnX, spawnY);
+    roomTransition.switched = true;
+  }
+
+  if (roomTransition.elapsed >= ROOM_TRANSITION_DURATION) {
+    roomTransition.active = false;
+    roomTransition.destination = null;
+  }
+}
 
 const MAP_REGIONS = {
   villa: { name: 'Villa Refugio, Sendero de Ceniza y Fortaleza Carmesí', roomIds: [-2, -1, 0, 31, 32, 33, ...Array.from({ length: 8 }, (_, index) => 101 + index), 1, 2, 3, 4, 5, 6, 7, 8, 17, 27, ...Array.from({ length: 20 }, (_, index) => 1001 + index)] },
