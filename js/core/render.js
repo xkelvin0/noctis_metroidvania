@@ -219,8 +219,12 @@ function drawWorld(ctx) {
   // Jugador Alaric
   drawPlayerSprite(ctx, player);
 
-  // Partículas
-  for (const pt of particles) { ctx.fillStyle = pt.color; ctx.fillRect(pt.x, pt.y, 2, 2); }
+  // Partículas y Chispas de Impacto
+  for (const pt of particles) {
+    ctx.fillStyle = pt.color;
+    const s = pt.size || 2;
+    ctx.fillRect(Math.round(pt.x), Math.round(pt.y), s, s);
+  }
 
   // Números de daño flotantes
   ctx.font = '14px "VT323", monospace';

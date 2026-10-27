@@ -63,3 +63,4 @@ function updateRelicsUI() {
 
   if (countBadge) countBadge.textContent = `${count} / ${RELICS_DATA.length} Reliquias · ${equipped.length}/${slots} Amuletos`;
 }
+

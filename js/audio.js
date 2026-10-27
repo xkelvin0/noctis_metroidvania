@@ -107,6 +107,15 @@ function sfx(type) {
     gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
     osc.start(now);
     osc.stop(now + 0.35);
+  } else if (type === 'pogo_hit') {
+    // Clang metálico nítido y resonante de rebote sobre enemigo o pincho
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.exponentialRampToValueAtTime(1760, now + 0.07);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+    osc.start(now);
+    osc.stop(now + 0.22);
   } else if (type === 'cast') {
     // Disparo místico / Hechizo de sangre
     osc.type = 'sine';

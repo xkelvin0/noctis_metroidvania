@@ -69,6 +69,25 @@ function spawnParticles(x, y, color, count = 8) {
   }
 }
 
+// Chispas de impacto radial y corte de acero
+function spawnImpactSparks(x, y, dir = 1) {
+  const reducedFlashes = typeof gameSettings !== 'undefined' && gameSettings.flashes === false;
+  const count = reducedFlashes ? 4 : 9;
+  const sparkColors = ['#ffffff', '#fff0f3', '#ffbe0b', '#ff0055'];
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.random() - 0.5) * Math.PI * 0.9 + (dir === -1 ? Math.PI : 0);
+    const speed = Math.random() * 4.5 + 2.2;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.6,
+      life: 8 + Math.random() * 6,
+      color: sparkColors[Math.floor(Math.random() * sparkColors.length)],
+      size: Math.random() > 0.4 ? 3 : 2
+    });
+  }
+}
+
 // Movimiento con resolución continua de colisiones en X e Y
 function moveWithCollisions(ent, isPlayer = false) {
   if (isPlayer && typeof player !== 'undefined') player.wallDir = 0;

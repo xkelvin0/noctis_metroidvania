@@ -218,3 +218,4 @@ function renderLargeMap() {
   };
   mapCanvas.onmouseleave = () => { if (tooltip) tooltip.classList.remove('visible'); };
 }
+

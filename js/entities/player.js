@@ -329,13 +329,15 @@ function updatePlayer(keys, justPressed) {
   const isPogoSlash = player.attackTimer > 2 && player.attackDir === 'down';
   if (footTile === '^') {
     if (isPogoSlash) {
-      player.vy = -6.4;
+      player.vy = -6.8;
       player.jumpsLeft = player.hasDoubleJump ? 1 : 0;
-      sfx('hit');
-      triggerShake(6, 2);
+      player.dashCooldown = 0;
+      sfx('pogo_hit');
+      triggerShake(7, 2.5);
       triggerHitStop(3);
       spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffffff', 10);
       spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffbe0b', 8);
+      spawnImpactSparks(player.x + player.w / 2, player.y + player.h, player.dir);
     } else {
       damagePlayer(20, cx * TILE + 8);
     }
@@ -594,14 +596,20 @@ function updatePlayer(keys, justPressed) {
         spawnBloodParticles(e.x + e.w / 2, e.y + e.h / 2, player.dir, 10);
 
         if (isDown) {
-          player.vy = -6.4;
+          player.vy = -6.8;
           player.jumpsLeft = player.hasDoubleJump ? 1 : 0;
+          player.dashCooldown = 0;
           e.vy = 2.0;
+          sfx('pogo_hit');
           spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffffff', 8);
+          spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffbe0b', 6);
+          spawnImpactSparks(e.x + e.w / 2, e.y + 4, player.dir);
         } else {
+          player.vx -= player.dir * 0.9;
           const kbForce = e.type === 'boss' ? 0.8 : (e.type === 'armor' ? 1.6 : 3.2);
           e.knockbackX = player.dir * kbForce;
           if (e.type !== 'boss') e.vy = -1.8;
+          spawnImpactSparks(e.x + (player.dir === 1 ? 2 : e.w - 2), e.y + e.h / 2, player.dir);
         }
 
         if (e.type === 'boss') {

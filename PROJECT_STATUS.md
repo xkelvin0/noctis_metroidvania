@@ -170,6 +170,12 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
       - `js/ui/pause.js` (110 líneas): Coordinador maestro de pestañas, alternancia de pausa `togglePause`, reinicio y guardado manual.
     - Integrado en `index.html` y verificado al 100% en Node.js VM.
 
+17. **Game Feel y Combate Visceral (Impact Flash, Slash Arcs y Pogo Jugoso)**:
+    - **Arco de Espada en Medialuna (*Slash Arc*)**: Renderizado multicapa en `js/sprites/player.js` con halo carmesí exterior (`#ff0055`), filo interior de acero blanco brillante (`#ffffff`), destellos en cruz de acero en la punta y seguimiento angular suave según la progresión del ataque.
+    - **Tajo hacia Abajo / Pogo Mejorado**: Estela semicircular descendente con filo penetrante vertical, impulso de rebote elevado (`vy = -6.8`), reinicio automático del enfriamiento del Dash para permitir combos aéreos fluidos (estilo *Hollow Knight*) y chispas radiales `spawnImpactSparks`.
+    - **Destello de Impacto Puro (*Hit Flash*)**: Cuando cualquier monstruo o jefe recibe un impacto, su silueta se tiñe de blanco puro radiante durante los primeros 3 frames de daño (`hurtTimer >= 9`), otorgando una sensación de impacto contundente e instantáneo.
+    - **Física de Retroceso y Clang Sonoro**: Alaric experimenta un ligero retroceso mutuo al impactar con la espada para aportar peso al golpe; implementado efecto sonoro sintetizado `pogo_hit` con doble resonancia metálica al rebotar sobre enemigos o pinchos.
+
 ---
 
 ## 3. Controles Principales del Juego

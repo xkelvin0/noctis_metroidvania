@@ -86,3 +86,4 @@ function updateQuestsUI() {
     return `<article class="memory-card ${unlocked ? 'unlocked' : 'locked'}"><h4>${unlocked ? '✦ ' + memory.title : '🔒 Memoria sellada'}</h4><p>${unlocked ? memory.text : 'Restaura el sello correspondiente para revelar esta memoria.'}</p></article>`;
   }).join('');
 }
+

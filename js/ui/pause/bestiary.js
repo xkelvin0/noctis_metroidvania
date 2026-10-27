@@ -35,3 +35,4 @@ function updateBestiaryUI() {
     <div class="monster-weakness"><strong>💡 ESTRATEGIA / DEBILIDAD:</strong><br>${m.weakness}</div>
   `;
 }
+

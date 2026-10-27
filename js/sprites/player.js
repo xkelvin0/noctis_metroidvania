@@ -136,47 +136,106 @@ function drawPlayerSprite(ctx, p) {
   // Dibujar a Alaric (escala 1x en ancho, ajustado a su hitbox de 12x22)
   drawPixelMatrix(ctx, matrix, ALARIC_PALETTE, px, py + 6, flip, 1);
 
-  // Animación de Tajo de Espada / Látigo Carmesí en Arco (Frontal o Hacia Abajo)
+  // =========================================================================
+  // TAJO DE ESPADA VISCERAL (Slash Arc & Pogo Burst con Estela Carmesí/Plata)
+  // =========================================================================
   if (p.attackTimer > 0) {
     const progress = (12 - p.attackTimer) / 12; // 0.0 a 1.0
+    const alpha = Math.max(0.15, 1 - progress * 0.82);
+    const reach = p.attackReach || 0;
 
     ctx.save();
     if (p.attackDir === 'down') {
-      // Tajo hacia abajo (Pogo Down-Slash)
-      ctx.strokeStyle = '#ff0055';
-      ctx.lineWidth = 3;
+      // --- TAJO HACIA ABAJO (Pogo Down-Slash) ---
+      const cx = px + 6, cy = py + 15;
+      const r = 18 + reach * 0.5;
+      const startAngle = 0.15 + progress * 0.15;
+      const endAngle = Math.PI - 0.15 - progress * 0.15;
+
+      // 1. Estela de halo carmesí exterior
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = `rgba(180, 0, 50, ${alpha * 0.45})`;
       ctx.beginPath();
-      ctx.arc(px + 6, py + 18, 16, 0.2 + progress * 0.4, Math.PI - 0.2 - progress * 0.4);
+      ctx.arc(cx, cy, r + 2, startAngle, endAngle);
       ctx.stroke();
 
-      // Filo vertical brillante
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
+      // 2. Arco cortante carmesí vivo
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = `rgba(255, 0, 85, ${alpha})`;
       ctx.beginPath();
-      ctx.moveTo(px + 6, py + 16);
-      ctx.lineTo(px + 6, py + 30);
+      ctx.arc(cx, cy, r, startAngle, endAngle);
       ctx.stroke();
-    } else {
-      // Tajo frontal tradicional
-      ctx.strokeStyle = '#ff0055';
-      ctx.lineWidth = 3;
+
+      // 3. Filo interior blanco puro luminoso
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
       ctx.beginPath();
-      if (p.dir === 1) {
-        ctx.arc(px + 8, py + 11, 22, -0.8 + progress * 0.5, 0.7 + progress * 0.4);
-      } else {
-        ctx.arc(px + 4, py + 11, 22, Math.PI - 0.7 - progress * 0.4, Math.PI + 0.8 - progress * 0.5);
+      ctx.arc(cx, cy, r - 1.5, startAngle + 0.1, endAngle - 0.1);
+      ctx.stroke();
+
+      // 4. Hoja penetrando hacia abajo desde el guardamanos
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(cx, py + 14);
+      ctx.lineTo(cx, py + 33 + reach * 0.4);
+      ctx.stroke();
+
+      // 5. Destello de impacto en la punta durante la fase inicial
+      if (progress < 0.5) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cx - 2, py + 31 + reach * 0.4, 4, 4);
+        ctx.fillStyle = '#ffbe0b';
+        ctx.fillRect(cx - 4, py + 32 + reach * 0.4, 8, 2);
       }
+    } else {
+      // --- TAJO FRONTAL (Wide Crescent Slash) ---
+      const cx = px + (flip ? 4 : 8), cy = py + 11;
+      const r = 24 + reach;
+      const startAngle = flip ? (Math.PI * 1.45 - progress * 0.3) : (-Math.PI * 0.45 + progress * 0.3);
+      const endAngle = flip ? (Math.PI * 0.65 - progress * 0.4) : (Math.PI * 0.35 + progress * 0.4);
+
+      // 1. Halo difuminado de energía carmesí exterior
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = `rgba(180, 0, 50, ${alpha * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2.5, Math.min(startAngle, endAngle), Math.max(startAngle, endAngle));
       ctx.stroke();
 
-      // Filo interior blanco brillante
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
+      // 2. Arco cortante carmesí vivo
+      ctx.lineWidth = 3.8;
+      ctx.strokeStyle = `rgba(255, 0, 85, ${alpha})`;
       ctx.beginPath();
-      ctx.moveTo(px + (p.dir === 1 ? 10 : 2), py + 11);
-      ctx.lineTo(px + (p.dir === 1 ? 32 : -20), py + 9 + Math.sin(progress * Math.PI) * 5);
+      ctx.arc(cx, cy, r, Math.min(startAngle, endAngle), Math.max(startAngle, endAngle));
       ctx.stroke();
+
+      // 3. Filo interior blanco puro luminoso
+      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 1.5, Math.min(startAngle, endAngle) + 0.1, Math.max(startAngle, endAngle) - 0.1);
+      ctx.stroke();
+
+      // 4. Hoja metálica extendida desde la empuñadura hasta la punta
+      const currentTipAngle = startAngle + (endAngle - startAngle) * progress;
+      const tipX = cx + Math.cos(currentTipAngle) * (r + 1);
+      const tipY = cy + Math.sin(currentTipAngle) * (r + 1);
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(tipX, tipY);
+      ctx.stroke();
+
+      // 5. Destello en cruz de acero en la punta
+      if (progress < 0.55) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(Math.round(tipX - 2), Math.round(tipY - 2), 4, 4);
+        ctx.fillStyle = '#ffbe0b';
+        ctx.fillRect(Math.round(tipX - 4), Math.round(tipY - 1), 8, 2);
+        ctx.fillRect(Math.round(tipX - 1), Math.round(tipY - 4), 2, 8);
+      }
     }
     ctx.restore();
   }
 }
-

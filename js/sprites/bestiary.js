@@ -455,6 +455,17 @@ function drawEnemySprite(ctx, e, animClock) {
     ctx.textAlign = 'left';
     ctx.restore();
   }
+
+  // Destello de impacto visceral blanco puro (Hit Flash estilo Hollow Knight)
+  if (e.hurtTimer >= 9 && e.type !== 'citizen') {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.fillRect(ex, ey, e.w, e.h);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(ex - 0.5, ey - 0.5, e.w + 1, e.h + 1);
+    ctx.restore();
+  }
 }
 
 // =========================================================

@@ -103,3 +103,4 @@ if (btnRebindTravel) btnRebindTravel.addEventListener('click', () => captureBind
 if (difficultySelect) difficultySelect.addEventListener('change', () => { gameSettings.difficulty = difficultySelect.value; saveProgress(); });
 if (toggleShake) toggleShake.addEventListener('change', () => { gameSettings.screenShake = toggleShake.checked; saveProgress(); });
 if (toggleFlashes) toggleFlashes.addEventListener('change', () => { gameSettings.flashes = toggleFlashes.checked; saveProgress(); });
+
