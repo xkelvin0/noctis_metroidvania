@@ -11,10 +11,28 @@ function defeatEnemyFromStatus(enemy) {
     addMaterial(materialForCurrentZone(), 3);
   }
   if (typeof recordQuestKill === 'function') recordQuestKill(enemy.type, !!enemy.elite);
-  const orbCount = enemy.type === 'boss' ? 20 : (enemy.type === 'armor' ? 5 : (enemy.type === 'skeleton' ? 3 : 2));
+  if (typeof recordBestiaryKill === 'function') recordBestiaryKill(enemy.type);
+
+  const essenceMult = (typeof getBestiaryEssenceMultiplier === 'function') ? getBestiaryEssenceMultiplier(enemy.type) : 1;
+  const baseOrbCount = enemy.type === 'boss' ? 20 : (enemy.type === 'armor' ? 5 : (enemy.type === 'skeleton' ? 3 : 2));
+  const orbCount = Math.round(baseOrbCount * essenceMult);
   for (let index = 0; index < orbCount; index++) {
     essenceOrbs.push({ x: enemy.x + enemy.w / 2, y: enemy.y + enemy.h / 2, w: 5, h: 5, vx: (Math.random() - 0.5) * 4, vy: -Math.random() * 3.5 - 1, val: 5 });
   }
+
+  const heartBonus = (typeof getBestiaryHeartBonus === 'function') ? getBestiaryHeartBonus(enemy.type) : 0;
+  const dropChance = (enemy.type === 'boss' ? 1.0 : 0.35) + heartBonus;
+  if (Math.random() < dropChance) {
+    heartPickups.push({
+      x: enemy.x + enemy.w / 2 - 3,
+      y: enemy.y + enemy.h / 2 - 3,
+      w: 8, h: 8,
+      vx: (Math.random() - 0.5) * 2,
+      vy: -2.8,
+      heal: 25
+    });
+  }
+
   spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#ffbe0b', 18);
   if (enemy.type === 'boss') defeatBoss(enemy);
   const enemyIndex = enemies.indexOf(enemy);
@@ -459,7 +477,9 @@ function updateEnemies() {
             break;
           }
 
-          e.hp -= p.dmg;
+          const bestiaryMult = (typeof getBestiaryDamageMultiplier === 'function') ? getBestiaryDamageMultiplier(e.type) : 1;
+          const finalSpellDmg = Math.round(p.dmg * bestiaryMult);
+          e.hp -= finalSpellDmg;
           if (p.freeze) { e.freezeTimer = 100; spawnParticles(e.x + e.w / 2, e.y + 8, '#7de2ff', 8); }
           e.hurtTimer = 12;
           triggerShake(e.type === 'boss' ? 7 : 4, 2);
@@ -475,12 +495,12 @@ function updateEnemies() {
           spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ff0055', 10);
 
           floatingTexts.push({
-            text: `-${p.dmg}`,
+            text: `-${finalSpellDmg}${bestiaryMult > 1 ? ' ✦' : ''}`,
             x: e.x + e.w / 2 - 4,
             y: e.y - 6,
             vy: -1.3,
             life: 25,
-            color: '#ff007f'
+            color: bestiaryMult > 1 ? '#ffbe0b' : '#ff007f'
           });
 
           if (e.hp <= 0) {
@@ -488,8 +508,14 @@ function updateEnemies() {
             if (typeof recordQuestKill === 'function') {
               recordQuestKill(e.type, !!e.elite);
             }
+            if (typeof recordBestiaryKill === 'function') {
+              recordBestiaryKill(e.type);
+            }
             spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ffbe0b', 18);
-            const orbCount = e.type === 'boss' ? 20 : (e.type === 'armor' ? 5 : (e.type === 'skeleton' ? 3 : 2));
+
+            const essenceMult = (typeof getBestiaryEssenceMultiplier === 'function') ? getBestiaryEssenceMultiplier(e.type) : 1;
+            const baseOrbCount = e.type === 'boss' ? 20 : (e.type === 'armor' ? 5 : (e.type === 'skeleton' ? 3 : 2));
+            const orbCount = Math.round(baseOrbCount * essenceMult);
             for (let k = 0; k < orbCount; k++) {
               essenceOrbs.push({
                 x: e.x + e.w / 2, y: e.y + e.h / 2,
@@ -499,7 +525,10 @@ function updateEnemies() {
                 val: 5
               });
             }
-            if (Math.random() < (e.type === 'boss' ? 1.0 : 0.35)) {
+
+            const heartBonus = (typeof getBestiaryHeartBonus === 'function') ? getBestiaryHeartBonus(e.type) : 0;
+            const dropChance = (e.type === 'boss' ? 1.0 : 0.35) + heartBonus;
+            if (Math.random() < dropChance) {
               heartPickups.push({
                 x: e.x + e.w / 2 - 3, y: e.y + e.h / 2 - 3,
                 w: 8, h: 8,

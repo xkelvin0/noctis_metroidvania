@@ -344,7 +344,9 @@ function saveProgress() {
     seals,
     gameWon,
     storyProgress,
-    questTracker: (typeof questTracker !== 'undefined' ? questTracker : undefined)
+    questTracker: (typeof questTracker !== 'undefined' ? questTracker : undefined),
+    bestiaryKills: (typeof bestiaryKills !== 'undefined' ? bestiaryKills : {}),
+    bestiaryMastery: (typeof bestiaryMastery !== 'undefined' ? bestiaryMastery : {})
   };
   localStorage.setItem('noctis_save', JSON.stringify(data));
   const continueBtn = document.getElementById('btn-continue');

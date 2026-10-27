@@ -205,6 +205,37 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
       - *Bug 1 resuelto*: Se corrigió la condición de cruce por la puerta izquierda en `js/entities/player.js` (`(!doors.westUpper || player.y > 140)`), evitando que el jugador se quedase bloqueado en el aire en salas con una sola puerta oeste.
       - *Bug 2 resuelto*: Se añadió guardia en `js/ui/pause.js` para impedir abrir el menú de pausa durante los 150 ms de cambio de sala, previniendo desincronizaciones de estado.
 
+20. **Bestiario Interactivo con Recompensas de Caza (Hunter's Journal)**:
+    - **Registro de Bajas y Cupos por Especie**:
+      - Cada una de las 16 especies de monstruos y jefes posee un cupo de caza individualizado (`killQuota`).
+      - Seguimiento en tiempo real de bajas en combate cuerpo a cuerpo, rebote Pogo, hechizos a distancia y efectos de estado.
+    - **Bonificaciones Pasivas Permanentes por Maestría**:
+      - *Esqueleto Lancero*: +15% de daño con espada ("Sentencia Ósea").
+      - *Murciélago Vesperal*: +30% de probabilidad de soltar Corazones de Vida ("Festín Hematófago").
+      - *Armadura Acorazada*: +20% de daño al castigar armaduras por la espalda ("Punto Ciego de Acero").
+      - *Ballestero Sombrío*: +25% de Esencia Carmesí obtenida ("Reflejos de Cazador").
+      - *Inmolador de Ceniza*: +15% de daño con hechizos y armas ("Disipación Ígnea").
+      - *Sacerdote del Sol Sangrante (e Invocadores)*: +20% de daño con Hechizo Carmesí ("Corte del Hereje").
+      - *Gárgola Pétrea*: +25% de daño en Pogo y Martillo de Sangre ("Quiebra-Rocas").
+      - *Espectro Carmesí*: +30% de probabilidad de Corazones de Vida ("Comunión Espiritual").
+      - *Verdugo de Ceniza*: +15% de daño total contra verdugos y subjefes ("Desafío Titánico").
+      - *Autómata del Reloj*: +20% de daño con espada ("Desengranaje Crítico").
+      - *Astrónomo Hereje*: +25% de Esencia Carmesí y +10% de daño ("Alineación Astral").
+      - *Duelista de Sal*: +20% de daño de contraataque ("Riposte Magistral").
+      - *Invocador de Trampas*: +25% de probabilidad de Corazones de Vida ("Paso Firme").
+      - *Bestia de Carga*: +15% de daño con espada y Pogo ("Domador de Arietes").
+      - *Espectro de Cristal*: +30% de Esencia Carmesí ("Resonancia de Cristal").
+      - *Lord Malakor*: +10% de daño permanente contra TODOS los enemigos del juego ("Fin del Ocaso").
+    - **Interfaz Gótica en el Grimorio**:
+      - Barra lateral con medidores de bajas `${kills}/${quota}` y distintivo dorado `✦ DOMINADO`.
+      - Ficha detallada con barra de progreso animada, porcentaje de completitud y tarjeta luminosa de maestría activa vs bloqueada.
+      - Contador global en cabecera: `📖 X/16 Especies Dominadas` con resplandor dorado.
+    - **Feedback Inmediato en Combate**:
+      - Notificación en pantalla `showBanner` y texto flotante `¡MAESTRÍA: ...!` con fanfarria sonora `sfx('relic')` al desbloquear.
+      - Números de daño flotante potenciados con destello dorado `✦`.
+    - **Persistencia Total**:
+      - Guardado y carga transparente en `localStorage` (`bestiaryKills` y `bestiaryMastery`).
+
 ---
 
 ## 3. Controles Principales del Juego

@@ -330,7 +330,7 @@
 /* --- Bestiario --- */
 .bestiary-layout {
   display: grid;
-  grid-template-columns: 190px 1fr;
+  grid-template-columns: 210px 1fr;
   gap: 14px;
   height: 275px;
 }
@@ -346,17 +346,57 @@
   background: #180f26;
   border: 1px solid #361f4a;
   color: #d8cde3;
-  padding: 8px 10px;
+  padding: 7px 10px;
   font-family: inherit;
   font-size: 11px;
   text-align: left;
   cursor: pointer;
   border-radius: 4px;
   transition: 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .bestiary-btn:hover { background: #281740; border-color: #ff007f; }
 .bestiary-btn.active { background: #3b1138; border-color: #ff0055; color: #ffccd5; font-weight: bold; }
+.bestiary-btn.mastered { border-color: #7b4f2c; background: #1c1229; }
+.bestiary-btn.mastered:hover { border-color: #ffbe0b; background: #2e1a42; }
+.bestiary-btn.active.mastered { border-color: #ffbe0b; background: #3c1936; box-shadow: 0 0 10px rgba(255, 190, 11, 0.35); }
+
+.bestiary-btn-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hunter-sidebar-badge {
+  font-family: 'VT323', monospace;
+  font-size: 11px;
+  color: #a496b8;
+  background: #120b1d;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid #37204b;
+  white-space: nowrap;
+}
+
+.hunter-sidebar-badge.mastered {
+  color: #ffd166;
+  border-color: rgba(255, 209, 102, 0.5);
+  background: rgba(255, 209, 102, 0.12);
+  font-weight: bold;
+}
+
+.stat-badge.mastered-glow {
+  border-color: #ffbe0b;
+  color: #ffd166;
+  box-shadow: 0 0 8px rgba(255, 190, 11, 0.3);
+}
 
 .bestiary-detail {
   background: #11091d;
@@ -399,10 +439,143 @@
   align-items: center;
   justify-content: center;
   font-size: 24px;
+  transition: 0.2s;
+}
+
+.monster-avatar.mastered {
+  border-color: #ffbe0b;
+  box-shadow: 0 0 10px rgba(255, 190, 11, 0.35);
 }
 
 .monster-info h4 { color: #ff0055; font-size: 14px; }
 .monster-info span { color: #9e8fb2; font-size: 10px; }
+
+/* --- Hunter's Journal Progress Box & Mastery Cards --- */
+.hunter-progress-box {
+  background: #150b22;
+  border: 1px solid #3a2250;
+  border-radius: 5px;
+  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hunter-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hunter-progress-label {
+  font-size: 9.5px;
+  color: #ffccd5;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.hunter-progress-ratio {
+  font-family: 'VT323', monospace;
+  font-size: 11px;
+  color: #c77dff;
+}
+
+.hunter-progress-ratio.mastered {
+  color: #ffd166;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(255, 190, 11, 0.4);
+}
+
+.hunter-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: #090510;
+  border: 1px solid #371f49;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hunter-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff0055, #9d4edd);
+  transition: width 0.3s ease;
+}
+
+.hunter-bar-fill.mastered {
+  background: linear-gradient(90deg, #ff5400, #ffbe0b, #00f5d4);
+  box-shadow: 0 0 8px rgba(255, 190, 11, 0.6);
+}
+
+.hunter-reward-card {
+  padding: 8px 10px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.hunter-reward-card.unlocked {
+  background: linear-gradient(135deg, rgba(38, 20, 56, 0.95), rgba(58, 22, 42, 0.95));
+  border: 1px solid #ffbe0b;
+  box-shadow: 0 0 10px rgba(255, 190, 11, 0.22);
+}
+
+.hunter-reward-card.locked {
+  background: rgba(18, 11, 26, 0.85);
+  border: 1px dashed #4a305d;
+  opacity: 0.85;
+}
+
+.reward-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reward-card-title {
+  font-size: 10.5px;
+  color: #ffbe0b;
+  letter-spacing: 0.5px;
+}
+
+.hunter-reward-card.locked .reward-card-title {
+  color: #bfaecf;
+}
+
+.reward-card-title strong {
+  color: #fff;
+}
+
+.reward-status-pill {
+  font-family: 'VT323', monospace;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.reward-status-pill.active {
+  background: rgba(0, 245, 212, 0.15);
+  color: #00f5d4;
+  border: 1px solid rgba(0, 245, 212, 0.4);
+}
+
+.reward-status-pill.locked {
+  background: rgba(255, 0, 85, 0.12);
+  color: #ff758f;
+  border: 1px solid rgba(255, 0, 85, 0.3);
+}
+
+.reward-desc {
+  color: #e2d9eb;
+  font-size: 10px;
+  margin: 0;
+  line-height: 1.35;
+}
+
 .monster-stats { display: flex; gap: 12px; font-size: 10px; color: #ffccd5; background: #1c0e2b; padding: 4px 8px; border-radius: 4px; }
 .monster-desc { color: #c9b9db; font-size: 11px; line-height: 1.45; }
 

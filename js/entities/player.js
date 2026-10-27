@@ -144,16 +144,18 @@ function updatePlayer(keys, justPressed) {
       spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffbe0b', 16);
       for (const e of enemies) {
         if (Math.hypot(e.x - player.x, e.y - player.y) < 70) {
-          e.hp -= Math.round(player.atk * 1.8);
+          const bestiaryMult = (typeof getBestiaryDamageMultiplier === 'function') ? getBestiaryDamageMultiplier(e.type) : 1;
+          const diveDmg = Math.round(player.atk * 1.8 * bestiaryMult);
+          e.hp -= diveDmg;
           e.hurtTimer = 16;
           e.vy = -3.5;
           floatingTexts.push({
-            text: `-${Math.round(player.atk * 1.8)}`,
+            text: `-${diveDmg}${bestiaryMult > 1 ? ' ✦' : ''}`,
             x: e.x + e.w / 2,
             y: e.y - 6,
             vy: -1.4,
             life: 30,
-            color: '#ef476f'
+            color: bestiaryMult > 1 ? '#ffbe0b' : '#ef476f'
           });
         }
       }
@@ -584,7 +586,9 @@ function updatePlayer(keys, justPressed) {
           spawnParticles(swordBox.x + 10, swordBox.y + 8, '#adb5bd', 5);
           continue;
         }
-        e.hp -= player.atk;
+        const bestiaryMult = (typeof getBestiaryDamageMultiplier === 'function') ? getBestiaryDamageMultiplier(e.type) : 1;
+        const dealtDmg = Math.round(player.atk * bestiaryMult);
+        e.hp -= dealtDmg;
         if (player.poisonBlade) e.poisonTimer = 150;
         const bleedChance = (player.bleedChance || 0) + ((player.equippedAmulets || []).includes('blood_fang') ? 0.28 : 0) + (player.magicTree.blood || 0) * 0.08;
         if (bleedChance > 0 && Math.random() < bleedChance) { e.bleedTimer = 120 + (player.magicTree.blood || 0) * 20; spawnBloodParticles(e.x + e.w / 2, e.y + 8, player.dir, 6); }
@@ -626,11 +630,12 @@ function updatePlayer(keys, justPressed) {
         }
 
         floatingTexts.push({
-          text: `-${player.atk}`,
+          text: `-${dealtDmg}${bestiaryMult > 1 ? ' ✦' : ''}`,
           x: e.x + e.w / 2 - 4,
           y: e.y - 4,
           vy: -1.2,
-          life: 25
+          life: 25,
+          color: bestiaryMult > 1 ? '#ffbe0b' : '#ffccd5'
         });
 
         sfx('hit');
@@ -639,9 +644,14 @@ function updatePlayer(keys, justPressed) {
           if (typeof recordQuestKill === 'function') {
             recordQuestKill(e.type, !!e.elite);
           }
+          if (typeof recordBestiaryKill === 'function') {
+            recordBestiaryKill(e.type);
+          }
           spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ffbe0b', 18);
 
-          const orbCount = e.type === 'boss' ? 20 : (e.type === 'armor' ? 5 : (e.type === 'skeleton' ? 3 : 2));
+          const essenceMult = (typeof getBestiaryEssenceMultiplier === 'function') ? getBestiaryEssenceMultiplier(e.type) : 1;
+          const baseOrbCount = e.type === 'boss' ? 20 : (e.type === 'armor' ? 5 : (e.type === 'skeleton' ? 3 : 2));
+          const orbCount = Math.round(baseOrbCount * essenceMult);
           for (let k = 0; k < orbCount; k++) {
             essenceOrbs.push({
               x: e.x + e.w / 2,
@@ -653,7 +663,8 @@ function updatePlayer(keys, justPressed) {
             });
           }
 
-          const dropChance = e.type === 'boss' ? 1.0 : 0.35;
+          const heartBonus = (typeof getBestiaryHeartBonus === 'function') ? getBestiaryHeartBonus(e.type) : 0;
+          const dropChance = (e.type === 'boss' ? 1.0 : 0.35) + heartBonus;
           if (Math.random() < dropChance) {
             heartPickups.push({
               x: e.x + e.w / 2 - 3,

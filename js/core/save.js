@@ -55,6 +55,9 @@ if (btnNewGame) {
       };
     }
 
+    if (typeof bestiaryKills !== 'undefined') bestiaryKills = {};
+    if (typeof bestiaryMastery !== 'undefined') bestiaryMastery = {};
+
     seals = { carmesi: false, juramento: false, astral: false, reloj: false };
     storyProgress = { eliteKills: 0, eliteDefeated: {}, talkedHubs: {}, discoveredAltars: {} };
     purchasedMaps = {};
@@ -116,6 +119,12 @@ if (btnContinue) {
 
     if (d.questTracker && typeof questTracker !== 'undefined') {
       questTracker = d.questTracker;
+    }
+    if (d.bestiaryKills && typeof bestiaryKills !== 'undefined') {
+      bestiaryKills = d.bestiaryKills;
+    }
+    if (d.bestiaryMastery && typeof bestiaryMastery !== 'undefined') {
+      bestiaryMastery = d.bestiaryMastery;
     }
     if (d.lastAltarRoom !== undefined && typeof lastAltarRoom !== 'undefined') {
       lastAltarRoom = d.lastAltarRoom;
