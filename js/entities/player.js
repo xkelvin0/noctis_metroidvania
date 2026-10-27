@@ -23,6 +23,7 @@ const player = {
   hasShadeThread: false,
   hasStarWard: false,
   equippedAmulets: [],
+  equippedCape: 'carmesi',
   magicTree: { blood: 0, shadow: 0, astro: 0 },
   amuletSlotBonus: 0,
   nextSpellBonus: 0,

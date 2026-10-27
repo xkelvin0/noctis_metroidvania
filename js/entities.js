@@ -234,7 +234,14 @@ function defeatBoss(boss) {
     seals[boss.sealId] = true;
     addMaterial(materialForCurrentZone(), 5);
     sfx('relic');
-    showBanner(`✦ SELLO ${boss.sealName.toUpperCase()} RESTAURADO (${sealCount()}/4) · MEMORIA DESBLOQUEADA ✦`, 260);
+
+    if (typeof CAPES_DATA !== 'undefined' && CAPES_DATA[boss.sealId]) {
+      player.equippedCape = boss.sealId;
+      showBanner(`✦ SELLO ${boss.sealName.toUpperCase()} RESTAURADO · DESBLOQUEADA: ${CAPES_DATA[boss.sealId].fullName.toUpperCase()} ✦`, 280);
+      if (typeof updateCapeButton === 'function') updateCapeButton();
+    } else {
+      showBanner(`✦ SELLO ${boss.sealName.toUpperCase()} RESTAURADO (${sealCount()}/4) · MEMORIA DESBLOQUEADA ✦`, 260);
+    }
     saveProgress();
   }
 }
@@ -319,6 +326,7 @@ function saveProgress() {
     hasShadeThread: player.hasShadeThread,
     hasStarWard: player.hasStarWard,
     equippedAmulets: player.equippedAmulets,
+    equippedCape: player.equippedCape || 'carmesi',
     magicTree: player.magicTree,
     amuletSlotBonus: player.amuletSlotBonus,
     nextSpellBonus: player.nextSpellBonus,

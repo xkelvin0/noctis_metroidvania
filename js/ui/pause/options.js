@@ -22,6 +22,18 @@ const toggleRumble = document.getElementById('toggle-rumble');
 const btnToggleSound = document.getElementById('btn-toggle-sound');
 const btnToggleObjective = document.getElementById('btn-toggle-objective');
 const btnToggleGraphics = document.getElementById('btn-toggle-graphics');
+const btnToggleCape = document.getElementById('btn-toggle-cape');
+const btnExportSave = document.getElementById('btn-export-save');
+const btnImportSave = document.getElementById('btn-import-save');
+
+function updateCapeButton() {
+  if (!btnToggleCape) return;
+  const capeId = (typeof player !== 'undefined' && player.equippedCape) ? player.equippedCape : 'carmesi';
+  const cape = (typeof CAPES_DATA !== 'undefined' && CAPES_DATA[capeId]) ? CAPES_DATA[capeId] : { name: 'Capa Carmesí' };
+  const unlockedCount = (typeof getUnlockedCapes === 'function') ? getUnlockedCapes().length : 1;
+  const accent = (cape.palette && cape.palette['R']) ? cape.palette['R'] : '#ff0055';
+  btnToggleCape.innerHTML = `🧣 Capa Cosmética: <strong style="color: ${accent}">${cape.name}</strong> (${unlockedCount}/4)`;
+}
 
 function syncAudioOptions() {
   const music = gameSettings.musicVolume ?? 0.7, effects = gameSettings.sfxVolume ?? 0.8;
@@ -32,6 +44,7 @@ function syncAudioOptions() {
   if (toggleShake) toggleShake.checked = gameSettings.screenShake !== false;
   if (toggleFlashes) toggleFlashes.checked = gameSettings.flashes !== false;
   if (toggleRumble) toggleRumble.checked = gameSettings.gamepadRumble !== false;
+  updateCapeButton();
   const bindings = [
     [btnRebindJump, 'jumpKey', 'SALTO', ' '], [btnRebindDash, 'dashKey', 'DASH', 'shift'], [btnRebindAttack, 'attackKey', 'ATAQUE', 'mouseLeft'],
     [btnRebindLeft, 'leftKey', 'MOVIMIENTO IZQUIERDA', 'a'], [btnRebindRight, 'rightKey', 'MOVIMIENTO DERECHA', 'd'],
@@ -106,4 +119,30 @@ if (difficultySelect) difficultySelect.addEventListener('change', () => { gameSe
 if (toggleShake) toggleShake.addEventListener('change', () => { gameSettings.screenShake = toggleShake.checked; saveProgress(); });
 if (toggleFlashes) toggleFlashes.addEventListener('change', () => { gameSettings.flashes = toggleFlashes.checked; saveProgress(); });
 if (toggleRumble) toggleRumble.addEventListener('change', () => { gameSettings.gamepadRumble = toggleRumble.checked; saveProgress(); if (gameSettings.gamepadRumble && typeof triggerGamepadRumble === 'function') triggerGamepadRumble(200, 0.5, 0.7); });
+
+if (btnToggleCape) {
+  btnToggleCape.addEventListener('click', () => {
+    if (typeof cyclePlayerCape === 'function') {
+      cyclePlayerCape();
+    }
+  });
+}
+
+if (btnExportSave) {
+  btnExportSave.addEventListener('click', () => {
+    if (typeof exportSaveToFile === 'function') {
+      exportSaveToFile();
+    }
+  });
+}
+
+if (btnImportSave) {
+  btnImportSave.addEventListener('click', () => {
+    const input = document.getElementById('input-import-save');
+    if (input) {
+      input.value = '';
+      input.click();
+    }
+  });
+}
 

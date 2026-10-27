@@ -236,6 +236,17 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
     - **Persistencia Total**:
       - Guardado y carga transparente en `localStorage` (`bestiaryKills` y `bestiaryMastery`).
 
+21. **Exportar e Importar Partidas (Backup JSON) y Capas Cosméticas Desbloqueables por Sello**:
+    - **Backup de Guardado (Exportación e Importación JSON)**:
+      - *Exportar*: Descarga instantánea del archivo `noctis_save.json` desde el botón en la pestaña de Opciones, garantizando respaldo fuera del almacenamiento del navegador.
+      - *Importar*: Carga de archivos de partida tanto desde el menú principal como dentro del juego (Pestaña de Opciones), con validación de integridad, restauración idéntica a Continue y audio de confirmación.
+    - **Capas Cosméticas Desbloqueables por Sello del Eclipse**:
+      - *Capa Carmesí* (Inicial): El manto rojo sangre tradicional del cazador con estela carmesí.
+      - *Capa del Juramento* (Sello del Juramento): Verde musgo umbrío con destellos esmeralda.
+      - *Capa del Reloj* (Sello del Reloj): Hábito áureo fundido con oro y bronce solar.
+      - *Capa Astral* (Sello Astral): Azul cósmico con estrellas titilantes dinámicas sobre la tela y estela de polvo estelar al correr o hacer Dash.
+      - Selector interactivo en la pestaña de Opciones (`🧣 Capa Cosmética: [Cambiar]`) y auto-equipamiento al purificar cada sello.
+
 ---
 
 ## 3. Controles Principales del Juego

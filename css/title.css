@@ -68,6 +68,19 @@
   border-color: #2e1d3a;
 }
 
+#title-screen button.secondary-btn {
+  font-size: 13px;
+  padding: 8px 18px;
+  border-color: #5a2a82;
+  color: #d8b4f8;
+}
+
+#title-screen button.secondary-btn:hover {
+  background: #3c1361;
+  border-color: #c77dff;
+  color: #ffffff;
+}
+
 #title-screen .credits {
   position: absolute;
   bottom: 16px;

@@ -616,6 +616,15 @@
 .options-actions button.danger { border-color: #800f2f; color: #ff758f; }
 .options-actions button.danger:hover { background: #590d22; border-color: #ff0055; color: #fff; }
 
+#btn-export-save { border-color: #06d6a0; color: #e8fccf; }
+#btn-export-save:hover { background: #0f382c; border-color: #00f5d4; color: #fff; }
+
+#btn-import-save { border-color: #9d4edd; color: #f2e9e4; }
+#btn-import-save:hover { background: #3c1361; border-color: #c77dff; color: #fff; }
+
+#btn-toggle-cape { border-color: #ffbe0b; color: #fff; }
+#btn-toggle-cape:hover { background: #3d2314; border-color: #ffd166; }
+
 .pause-footer { margin-top: 6px; }
 
 #btn-quick-resume {

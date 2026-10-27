@@ -27,6 +27,7 @@
       <div class="title-buttons">
         <button id="btn-new-game">Nueva Partida</button>
         <button id="btn-continue" class="disabled">Continuar</button>
+        <button id="btn-title-import" class="secondary-btn">📤 Cargar Partida (.JSON)</button>
       </div>
       <span class="credits">Metroidvania 2D - Prototipo Web</span>
     </div>
@@ -176,6 +177,9 @@
           <div class="options-actions">
             <button id="btn-resume">▶ Reanudar Partida (ESC / P)</button>
             <button id="btn-save-game">💾 Guardar Partida (Progreso Actual)</button>
+            <button id="btn-export-save">📥 Exportar Partida (.JSON)</button>
+            <button id="btn-import-save">📤 Importar Partida (.JSON)</button>
+            <button id="btn-toggle-cape">🧣 Capa Cosmética: Capa Carmesí [Cambiar]</button>
             <button id="btn-toggle-sound">🔊 Alternar Sonido / Música (O)</button>
             <button id="btn-toggle-graphics">🖥️ Modo Gráfico: HD Nítido 960p (H)</button>
             <button id="btn-toggle-objective">✦ Marcador de objetivo: ACTIVADO</button>
@@ -204,6 +208,7 @@
         <button id="btn-quick-resume">Reanudar (ESC)</button>
       </div>
     </div>
+    <input id="input-import-save" type="file" accept=".json" style="display: none;">
   </div>
 
   <!-- Barra de controles removida a petición del jugador -->
