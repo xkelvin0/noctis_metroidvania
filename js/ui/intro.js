@@ -10,27 +10,27 @@ const btnSkipIntro = document.getElementById('btn-skip-intro');
 
 const INTRO_DIALOGS = [
   {
-    bg: "images/intro_bg.jpg",
+    bg: "img/cinematics/intro_bg.jpg",
     speaker: "EL SUSURRO DE LA CENIZA",
     text: "La piedra del sepulcro cede con un quejido hueco... El aire entra en tus pulmones como agujas de escarcha. No hay canto de aves, ni viento, ni sol. Solo un silencio sepulcral."
   },
   {
-    bg: "images/intro_alaric.jpg",
+    bg: "img/cinematics/intro_alaric.jpg",
     speaker: "ALARIC — EL DESPERTAR",
     text: "«¿Cuánto tiempo ha pasado?... Mis manos tiemblan. La carne me pesa como si hubiera dormido un siglo bajo tierra. Y este frío... mi sangre late con dolor, cristalizándose en las venas.»"
   },
   {
-    bg: "images/intro_bg.jpg",
+    bg: "img/cinematics/intro_bg.jpg",
     speaker: "ALARIC — EL DESPERTAR",
     text: "«En lo alto... el sol ha sido devorado por un disco negro sangrante. Malakor... hermano... ¿qué locura cometiste con este reino mientras yo dormía en estasis?»"
   },
   {
-    bg: "images/intro_villa.jpg",
+    bg: "img/cinematics/intro_villa.jpg",
     speaker: "ALARIC — EL DESPERTAR",
     text: "«A lo lejos, entre la niebla carmesí, distingo el débil tañido de una campana de plata y chimeneas encendidas. Hay supervivientes al pie de la montaña... Necesito respuestas antes de que mi corazón se congele.»"
   },
   {
-    bg: "images/intro_plaza.jpg",
+    bg: "img/cinematics/intro_plaza.jpg",
     speaker: "EL ECO DEL ECLIPSE",
     text: "Tu sangre es la última llama viva de Véspera. Avanza hacia la luz de la villa... habla con aquellos que aún resisten y descubre qué le ocurrió al mundo."
   }
@@ -93,6 +93,7 @@ function finishIntroCutscene() {
   loadRoom(-2, 80, 200);
   setBgmMode('explore');
   sfx('relic');
+  beginArrivalTutorial();
   showBanner("Adéntrate en la Villa: busca a los supervivientes y descubre la verdad del Eclipse", 280);
 }
 

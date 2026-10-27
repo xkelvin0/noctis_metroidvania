@@ -24,8 +24,22 @@ function openShop(merchantKey = 'dario') {
   const portraitEl = document.querySelector('.shop-portrait');
 
   if (titleEl) titleEl.textContent = config.name;
-  if (subEl) subEl.textContent = config.subtitle;
+  if (subEl) {
+    const hasUnclaimed = typeof QUESTS_DATA !== 'undefined' && QUESTS_DATA.some(q => {
+      const [cur, tot] = q.progress();
+      return cur >= tot && !isQuestClaimed(q.id);
+    });
+    if (hasUnclaimed && merchantKey === 'dario') {
+      subEl.textContent = '«¡Veo que has cumplido juramentos de cacería! Reclama tu esencia en el Grimorio [P / Misiones].»';
+    } else {
+      subEl.textContent = config.subtitle;
+    }
+  }
   if (portraitEl) portraitEl.style.backgroundImage = config.portrait;
+
+  if (typeof recordQuestTalk === 'function') {
+    recordQuestTalk(config.name);
+  }
 
   shopModal.classList.remove('hidden');
   isPaused = true;
@@ -56,6 +70,18 @@ function showShopFeedback(msg, isError = false) {
   }, 1800);
 }
 
+function hasRecipeMaterials(ingredients = {}) {
+  return Object.entries(ingredients).every(([type, amount]) => (materials[type] || 0) >= amount);
+}
+
+function consumeRecipeMaterials(ingredients = {}) {
+  Object.entries(ingredients).forEach(([type, amount]) => { materials[type] -= amount; });
+}
+
+function recipeLabel(ingredients = {}) {
+  return Object.entries(ingredients).map(([type, amount]) => `${MATERIALS_DATA[type].icon}${amount}`).join(' ');
+}
+
 function updateShopUI() {
   if (!shopItemsList) return;
   const config = MERCHANTS_CONFIG[currentActiveMerchant] || MERCHANTS_CONFIG.dario;
@@ -71,7 +97,7 @@ function updateShopUI() {
         <div class="shop-item-icon">${item.icon}</div>
         <div class="shop-item-text">
           <h4>${item.name}</h4>
-          <p>${item.desc}</p>
+          <p>${item.desc}${item.ingredients ? `<br><small>Materiales: ${recipeLabel(item.ingredients)}</small>` : ''}</p>
         </div>
       </div>
       <button class="shop-buy-btn ${isSoldOut ? 'bought' : ''}" ${isSoldOut ? 'disabled' : ''}>
@@ -83,15 +109,16 @@ function updateShopUI() {
     if (!isSoldOut) {
       buyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (player.essence >= item.cost) {
+        if (player.essence >= item.cost && hasRecipeMaterials(item.ingredients)) {
           player.essence -= item.cost;
+          consumeRecipeMaterials(item.ingredients);
           const isUnique = item.buy();
           if (isUnique) shopInventoryState[item.id] = true;
           updateShopUI();
           saveProgress();
           showShopFeedback('¡Adquirido con éxito!', false);
         } else {
-          showShopFeedback(`Requiere ${item.cost} ♦ de Esencia`, true);
+          showShopFeedback(player.essence < item.cost ? `Requiere ${item.cost} ♦ de Esencia` : 'Faltan materiales para esta receta', true);
           sfx('hit');
         }
       });

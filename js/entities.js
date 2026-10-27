@@ -1,5 +1,10 @@
-let currentRoomId = 1;
-let visitedRooms = { 1: true };
+// =============================================================================
+// js/entities.js - Estado del Juego, Sellos, Checkpoints y Carga de Salas
+// Noctis: Metroidvania - Módulo Central de Entidades y Progresión
+// =============================================================================
+
+let currentRoomId = -2;
+let visitedRooms = { '-2': true };
 let bannerText = "";
 let bannerTimer = 0;
 let particles = [];
@@ -8,40 +13,119 @@ let enemies = [];
 let relics = [];
 let essenceOrbs = [];
 let heartPickups = [];
+let materials = { ash: 0, bone: 0, crystal: 0, gear: 0, flower: 0 };
+const MATERIALS_DATA = {
+  ash: { name: 'Ceniza', icon: '◈', color: '#b8a9c9' }, bone: { name: 'Hueso Antiguo', icon: '☠', color: '#e9dfc5' },
+  crystal: { name: 'Cristal Astral', icon: '✦', color: '#7de2ff' }, gear: { name: 'Engranaje Roto', icon: '⚙', color: '#d8b766' }, flower: { name: 'Flor Lunar', icon: '✿', color: '#e0aaff' }
+};
 let floatingTexts = [];
 let screenShakeTimer = 0;
 let shakeMagnitude = 0;
 let hitStopTimer = 0;
 let respawnFrames = 0;
+let arrivalPromptLocked = false;
+let arrivalGuideBeacon = false;
+let lastAltarRoom = -2;
+let lastAltarX = 150;
+let lastAltarY = 200;
 
 let breakableWallHits = {}; // Key: "roomId_col_row" -> hits remaining (default 3)
 let brokenWalls = {};       // Key: "roomId_col_row" -> boolean true
 
-function triggerShake(duration, magnitude) {
-  screenShakeTimer = duration;
-  shakeMagnitude = magnitude;
+
+function addMaterial(type, amount = 1) {
+  if (!MATERIALS_DATA[type]) return;
+  materials[type] = (materials[type] || 0) + amount;
+  floatingTexts.push({ text: `+${amount} ${MATERIALS_DATA[type].name}`, x: player.x - 8, y: player.y - 12, vy: -0.9, life: 35, color: MATERIALS_DATA[type].color });
 }
 
-function triggerHitStop(frames = 3) {
-  hitStopTimer = frames;
+function materialForCurrentZone() {
+  const zone = typeof getRoomZone === 'function' ? getRoomZone(currentRoomId) : 'carmesi';
+  return zone === 'juramento' ? 'bone' : zone === 'reloj' ? 'gear' : zone === 'astral' ? 'crystal' : 'ash';
+}
+
+function respawnAtLastAltar() {
+  showBanner("✦ RESUCITADO EN EL ALTAR DE SANGRE ✦", 180);
+  respawnFrames = 2;
+  hitStopTimer = 0;
+  player.dashTimer = 0;
+  player.attackTimer = 0;
+  player.attackCooldown = 0;
+  player.castCooldown = 0;
+  player.vx = 0;
+  player.vy = 0;
+  projectiles = [];
+  particles = [];
+  player.hp = player.maxHp;
+
+  const saved = localStorage.getItem('noctis_save');
+  if (saved) {
+    try {
+      const d = JSON.parse(saved);
+      if (d.lastAltarRoom !== undefined && ROOM_DEFS[d.lastAltarRoom]) {
+        lastAltarRoom = d.lastAltarRoom;
+        lastAltarX = d.lastAltarX || 150;
+        lastAltarY = d.lastAltarY || 200;
+      }
+    } catch(err) {}
+  }
+
+  loadRoom(lastAltarRoom, lastAltarX, lastAltarY);
+  sfx('relic');
+  spawnParticles(player.x + 6, player.y + 10, '#ffbe0b', 24);
+  spawnParticles(player.x + 6, player.y + 10, '#00f5d4', 16);
 }
 
 let gameWon = false;
 let seals = { carmesi: false, juramento: false, astral: false, reloj: false };
-let storyProgress = { eliteKills: 0, talkedHubs: {}, discoveredAltars: {} };
+let storyProgress = { eliteKills: 0, eliteDefeated: {}, talkedHubs: {}, discoveredAltars: {}, secretRewards: {} };
+
+const BOSS_IDENTITIES = {
+  carmesi: { phaseName: 'Filo del Eclipse', color: '#ff0055', phaseTwo: 'Embiste dos veces y sus pilares arden con sangre.', arena: 'Brasas carmesíes' },
+  juramento: { phaseName: 'Marea Profana', color: '#7cc7c1', phaseTwo: 'Las aguas consagradas irrumpen entre cada ataque.', arena: 'Marea de sal' },
+  astral: { phaseName: 'Supernova Fracturada', color: '#7de2ff', phaseTwo: 'Invoca una lluvia de estrellas sobre la arena.', arena: 'Lluvia de cometas' },
+  reloj: { phaseName: 'Última Campanada', color: '#d8b766', phaseTwo: 'Sus embestidas encadenadas aceleran el combate.', arena: 'Engranajes errantes' },
+  malakor: { phaseName: 'Furia del Eclipse', color: '#ff0055', phaseTwo: 'Despliega las alas y desata todo el núcleo carmesí.', arena: 'Sangre del Eclipse' }
+};
+const BOSS_MEMORIES = {
+  juramento: 'MEMORIA: La Abadesa inundó la cripta para ocultar el primer fragmento del Eclipse.',
+  reloj: 'MEMORIA: El Cronista congeló la hora en que Malakor robó la luz del cielo.',
+  astral: 'MEMORIA: El Serafín vio la grieta del Eclipse y la escondió entre constelaciones.',
+  carmesi: 'MEMORIA: El Caballero aceptó la sangre de Malakor para proteger a los suyos.'
+};
+
+const BOSS_ATTACK_ORDERS = {
+  carmesi: [[0, 1, 2], [0, 1, 2, 3]],
+  juramento: [[2, 0, 1], [2, 4, 0, 2, 1]],
+  astral: [[0, 1, 2], [3, 0, 3, 1]],
+  reloj: [[1, 0, 2], [1, 3, 0, 1]],
+  malakor: [[0, 1, 2], [0, 1, 2, 3]]
+};
 let purchasedMaps = {};
+let gameSettings = { showObjectiveMarker: true, leftKey: 'a', rightKey: 'd', downKey: 's', castKey: 'q', hookKey: 'f', interactKey: 'e', travelKey: 't' };
 
 const MAP_REGIONS = {
-  villa: { name: 'Villa Refugio y Fortaleza Carmesí', roomIds: [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 17, 27] },
-  juramento: { name: 'Enclave Subterráneo y Catacumbas', roomIds: [9, 11, 12, 18, 19, 20, 28] },
-  astral: { name: 'Santuario Astral y Observatorio', roomIds: [10, 13, 14, 21, 22, 23, 29] },
-  reloj: { name: 'Jardines del Reloj Muerto', roomIds: [15, 16, 24, 25, 26, 30] }
+  villa: { name: 'Villa Refugio, Sendero de Ceniza y Fortaleza Carmesí', roomIds: [-2, -1, 0, 31, 32, 33, ...Array.from({ length: 8 }, (_, index) => 101 + index), 1, 2, 3, 4, 5, 6, 7, 8, 17, 27, ...Array.from({ length: 20 }, (_, index) => 1001 + index)] },
+  juramento: { name: 'Enclave Subterráneo y Catacumbas', roomIds: [9, 34, 35, ...Array.from({ length: 5 }, (_, index) => 41 + index), 11, 12, 18, 19, 20, 28, ...Array.from({ length: 24 }, (_, index) => 201 + index)] },
+  astral: { name: 'Santuario Astral y Observatorio', roomIds: [10, 36, 37, ...Array.from({ length: 5 }, (_, index) => 51 + index), 13, 14, 21, 22, 23, 29, ...Array.from({ length: 24 }, (_, index) => 501 + index)] },
+  reloj: { name: 'Jardines del Reloj Muerto', roomIds: [...Array.from({ length: 5 }, (_, index) => 46 + index), 15, 16, 24, 25, 26, 30, ...Array.from({ length: 24 }, (_, index) => 401 + index)] }
 };
 
 function hasMapForRoom(roomId) {
   return Object.entries(MAP_REGIONS).some(([regionId, region]) =>
     purchasedMaps[regionId] && region.roomIds.includes(Number(roomId))
   );
+}
+
+function getObjectiveTargetRoom() {
+  if (!player.hasDash) return 104;
+  if (!player.hasDoubleJump) return 213;
+  if (!seals.juramento) return 12;
+  if (!player.hasWallJump) return 413;
+  if (!seals.reloj) return 16;
+  if (!seals.astral) return 14;
+  if (!seals.carmesi) return 17;
+  return 5;
 }
 
 function sealCount() {
@@ -64,67 +148,115 @@ const FORGE_UPGRADES = {
 function defeatBoss(boss) {
   if (boss.isFinal) {
     gameWon = true;
+    if (typeof recordQuestBoss === 'function') recordQuestBoss();
     setBgmMode('explore');
     sfx('relic');
-    showBanner("¡NÚCLEO CARMESÍ DESTRUIDO! HAS COMPLETADO EL PROTOTIPO", 400);
+    triggerShake(35, 7);
+    triggerHitStop(14);
+    showBanner("¡LORD MALAKOR PURIFICADO! EL SOL RENACE SOBRE VÉSPERA", 400);
+
+    // Dropeo especial de victoria
+    relics.push({
+      type: 'sun_heart',
+      name: 'Corazón del Sol Renacido',
+      x: boss.x + boss.w / 2 - 7,
+      y: boss.y + 10,
+      w: 14, h: 14
+    });
+    for (let k = 0; k < 30; k++) {
+      essenceOrbs.push({
+        x: boss.x + boss.w / 2, y: boss.y + boss.h / 2,
+        w: 5, h: 5,
+        vx: (Math.random() - 0.5) * 6,
+        vy: -Math.random() * 5 - 2,
+        val: 5
+      });
+    }
+    for (let k = 0; k < 4; k++) {
+      heartPickups.push({
+        x: boss.x + boss.w / 2 + (k - 2) * 12,
+        y: boss.y + boss.h / 2,
+        w: 8, h: 8,
+        vx: (Math.random() - 0.5) * 3,
+        vy: -3.5,
+        heal: 35
+      });
+    }
+    saveProgress();
+    setTimeout(() => showBanner(BOSS_MEMORIES[boss.sealId] || 'MEMORIA DEL ECLIPSE RECUPERADA.', 300), 320);
     return;
   }
 
   if (boss.sealId && !seals[boss.sealId]) {
     seals[boss.sealId] = true;
+    addMaterial(materialForCurrentZone(), 5);
     sfx('relic');
     showBanner(`✦ SELLO ${boss.sealName.toUpperCase()} RESTAURADO (${sealCount()}/4) · MEMORIA DESBLOQUEADA ✦`, 260);
+    saveProgress();
   }
 }
 
-const player = {
-  x: 45, y: 200, w: 12, h: 22,
-  vx: 0, vy: 0,
-  dir: 1,
-  hp: 100, maxHp: 100,
-  state: 'IDLE',
-  onGround: false,
-  coyoteTimer: 0,
-  jumpsLeft: 1,
-  hasDash: false,
-  hasDoubleJump: false,
-  hasWallJump: false,
-  hasHook: false,
-  hasMist: false,
-  hasDive: false,
-  hasAstralEye: false,
-  hasParryBrooch: false,
-  wallDir: 0,
-  essence: 0,      // <-- NUEVO: Moneda de Esencia recolectada
-  atk: 15,         // <-- NUEVO: Daño base de la espada
-  hpUpgrades: 0,   // <-- NUEVO: Contador de mejoras de Vida
-  atkUpgrades: 0,  // <-- NUEVO: Contador de mejoras de Daño
-  attackReach: 0,
-  spellPower: 0,
-  spellEfficiency: 0,
-  dashRecovery: 0,
-  healBonus: 0,
-  dashTimer: 0,
-  dashCooldown: 0,
-  mistTimer: 0,
-  mistCooldown: 0,
-  diveActive: false,
-  hookCooldown: 0,
-  attackTimer: 0,
-  attackCooldown: 0,
-  attackDir: 'forward', // 'forward' | 'down'
-  attackHitRegistered: false, // Previene golpear muros múltiples veces en un mismo swing
-  castCooldown: 0,
-  invulnTimer: 0,
-  animTimer: 0,
-  dropThroughTimer: 0
-};
-
 let bannerSpeaker = '';
+let dialoguePages = [];
+let dialoguePageIndex = 0;
+
+function paginateDialogueText(text, maxCharsPerLine = 52, maxLinesPerPage = 2) {
+  if (!text) return [['']];
+  const words = text.trim().split(/\s+/);
+  const pages = [];
+  let currentLines = [];
+  let currentLine = '';
+
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const testLine = currentLine ? (currentLine + ' ' + word) : word;
+    if (testLine.length <= maxCharsPerLine) {
+      currentLine = testLine;
+    } else {
+      if (currentLine) currentLines.push(currentLine);
+      currentLine = word;
+      if (currentLines.length >= maxLinesPerPage) {
+        pages.push(currentLines);
+        currentLines = [];
+      }
+    }
+  }
+  if (currentLine) currentLines.push(currentLine);
+  if (currentLines.length > 0) pages.push(currentLines);
+
+  return pages.length > 0 ? pages : [['']];
+}
+
 function showBanner(txt, duration = 150, speaker = '') {
   bannerText = txt;
-  bannerTimer = duration;
   bannerSpeaker = speaker || '';
+  if (speaker) {
+    bannerTimer = 999999; // Diálogos de NPCs no expiran por tiempo: permanecen hasta presionar 'E'
+    dialoguePages = paginateDialogueText(txt, 52, 2);
+    dialoguePageIndex = 0;
+  } else {
+    bannerTimer = duration;
+    dialoguePages = [];
+    dialoguePageIndex = 0;
+  }
+}
+
+function beginArrivalTutorial() {
+  arrivalPromptLocked = true;
+  arrivalGuideBeacon = true;
+}
+
+function closeBanner() {
+  bannerTimer = 0;
+  bannerText = '';
+  bannerSpeaker = '';
+  dialoguePages = [];
+  dialoguePageIndex = 0;
+}
+if (typeof window !== 'undefined') {
+  window.showBanner = showBanner;
+  window.closeBanner = closeBanner;
+  window.paginateDialogueText = paginateDialogueText;
 }
 
 function saveProgress() {
@@ -132,9 +264,24 @@ function saveProgress() {
     roomId: currentRoomId,
     x: player.x,
     y: player.y,
+    lastAltarRoom,
+    lastAltarX,
+    lastAltarY,
     hasDash: player.hasDash,
     hasDoubleJump: player.hasDoubleJump,
     hasWallJump: player.hasWallJump,
+    hasAstralEye: player.hasAstralEye,
+    hasParryBrooch: player.hasParryBrooch,
+    hasBloodFang: player.hasBloodFang,
+    hasShadeThread: player.hasShadeThread,
+    hasStarWard: player.hasStarWard,
+    equippedAmulets: player.equippedAmulets,
+    magicTree: player.magicTree,
+    amuletSlotBonus: player.amuletSlotBonus,
+    nextSpellBonus: player.nextSpellBonus,
+    hasHook: player.hasHook,
+    hasMist: player.hasMist,
+    hasDive: player.hasDive,
     essence: player.essence,
     maxHp: player.maxHp,
     atk: player.atk,
@@ -147,21 +294,41 @@ function saveProgress() {
     healBonus: player.healBonus,
     brokenWalls,
     shopInventoryState,
+    materials,
     purchasedMaps,
+    gameSettings,
     visitedRooms,
     seals,
-    storyProgress
+    gameWon,
+    storyProgress,
+    questTracker: (typeof questTracker !== 'undefined' ? questTracker : undefined)
   };
   localStorage.setItem('noctis_save', JSON.stringify(data));
+  const continueBtn = document.getElementById('btn-continue');
+  if (continueBtn) continueBtn.classList.remove('disabled');
+}
+
+function getCitySealDialogue(roomId, baseDialog) {
+  const sealsNow = sealCount();
+  if (!sealsNow) return baseDialog;
+  const city = [9, 34, 35].includes(Number(roomId)) ? 'enclave'
+    : [10, 36, 37].includes(Number(roomId)) ? 'santuario' : 'villa';
+  const reactions = {
+    villa: ['«La villa contiene la respiración; una luz ha vuelto a encenderse.»', '«Los faroles arden más tiempo desde que luchas por nosotros.»', '«Ya no hablamos de sobrevivir: hablamos del amanecer.»', '«¡Escucha! Por primera vez los niños no temen la noche.»'],
+    enclave: ['«El agua se ha calmado. Los juramentos ya no gritan bajo el pozo.»', '«La sal dejó de sangrar. Algo se está reparando en las catacumbas.»', '«Los caballeros han vuelto a pronunciar sus nombres.»', '«El Enclave abre sus compuertas: no hay nada que ocultar al alba.»'],
+    santuario: ['«Una constelación ha vuelto a dibujarse sobre la torre.»', '«Los prismas cantan; la grieta del Eclipse se está cerrando.»', '«Corvus dice que las estrellas ya recuerdan el camino a casa.»', '«El Observatorio prepara una señal para recibir el primer sol.»']
+  };
+  return `${baseDialog} ${reactions[city][Math.min(3, sealsNow - 1)]}`;
 }
 
 function loadRoom(id, spawnX, spawnY) {
   currentRoomId = id;
   visitedRooms[id] = true;
-  if (spawnX !== undefined) player.x = spawnX;
-  if (spawnY !== undefined) player.y = spawnY;
   player.vx = 0;
   player.vy = 0;
+  if (spawnX !== undefined) player.x = spawnX;
+  if (spawnY !== undefined) player.y = spawnY;
+  snapToGround(player);
   enemies = [];
   projectiles = [];
   relics = [];
@@ -170,1272 +337,102 @@ function loadRoom(id, spawnX, spawnY) {
 
   const def = ROOM_DEFS[id];
   showBanner(def.name, 110);
+  const cityRoom = [-2, -1, 0, 31, 32, 33, 9, 34, 35, 10, 36, 37].includes(Number(id));
+  if (cityRoom && sealCount() > 0) {
+    const mood = sealCount() === 4 ? 'LAS CIUDADES CELEBRAN: LOS 4 SELLOS HAN SIDO RESTAURADOS' : `LA CIUDAD HA CAMBIADO TRAS EL SELLO ${sealCount()}/4`;
+    setTimeout(() => showBanner(mood, 150), 120);
+  }
 
   // La música de jefe solo se activa en arenas con un enemigo activo.
   if (typeof setBgmMode === 'function') {
-    setBgmMode(def.spawns.some(s => s.type === 'boss') && !gameWon ? 'boss' : 'explore');
+    const activeBoss = def.spawns.some(s => s.type === 'boss' && !gameWon && (!s.sealId || !seals[s.sealId]) && (!s.isFinal || allSealsRestored()));
+    setBgmMode(activeBoss ? 'boss' : 'explore');
   }
 
   for (const s of def.spawns) {
-    if (s.type === 'relic_dash' && !player.hasDash) {
+    if (s.type === 'material_node') {
+      const nodeKey = `${id}_${s.x}_${s.y}`;
+      storyProgress.collectedNodes = storyProgress.collectedNodes || {};
+      if (!storyProgress.collectedNodes[nodeKey]) relics.push({ type: 'materialnode', material: s.material, nodeKey, name: `Nodo de ${MATERIALS_DATA[s.material].name}`, x: s.x, y: s.y, w: 14, h: 14 });
+    } else if (s.type === 'relic_dash' && !player.hasDash) {
       relics.push({ type: 'dash', name: 'Botas de Ceniza (Dash Sombrío [K / C])', x: s.x, y: s.y, w: 14, h: 14 });
     } else if (s.type === 'relic_doublejump' && !player.hasDoubleJump) {
       relics.push({ type: 'doublejump', name: 'Pluma del Cuervo (Doble Salto)', x: s.x, y: s.y, w: 14, h: 14 });
     } else if (s.type === 'relic_walljump' && !player.hasWallJump) {
       relics.push({ type: 'walljump', name: 'Garras de Gárgola (Salto en Pared)', x: s.x, y: s.y, w: 14, h: 14 });
+    } else if (s.type === 'relic_parrybrooch' && !player.hasParryBrooch) {
+      relics.push({ type: 'parrybrooch', name: 'Broche del Contraataque (Parry)', x: s.x, y: s.y, w: 14, h: 14 });
+    } else if (s.type === 'minor_bloodfang' && !player.hasBloodFang) {
+      relics.push({ type: 'bloodfang', name: 'Colmillo de la Herida', x: s.x, y: s.y, w: 14, h: 14 });
+    } else if (s.type === 'minor_shadethread' && !player.hasShadeThread) {
+      relics.push({ type: 'shadethread', name: 'Hilo de Sombra', x: s.x, y: s.y, w: 14, h: 14 });
+    } else if (s.type === 'minor_starward' && !player.hasStarWard) {
+      relics.push({ type: 'starward', name: 'Vigilia Estelar', x: s.x, y: s.y, w: 14, h: 14 });
     } else if (s.type === 'citizen' || s.type === 'guard') {
       const isGuard = s.type === 'guard' || !!s.isGuard || (s.name || '').toLowerCase().includes('guardia') || 
         (s.name || '').toLowerCase().includes('centinela') || (s.name || '').toLowerCase().includes('vigía') || 
         (s.name || '').toLowerCase().includes('capitán') || (s.name || '').toLowerCase().includes('ballestero') || 
         (s.name || '').toLowerCase().includes('sargento') || (s.name || '').toLowerCase().includes('paladín');
-      enemies.push({
-        type: 'citizen', isGuard: isGuard, name: s.name, dialog: s.dialog, x: s.x, y: s.y,
+      const npc = {
+        type: 'citizen', isGuard: isGuard, name: s.name, dialog: cityRoom ? getCitySealDialogue(id, s.dialog) : s.dialog, x: s.x, y: s.y,
         w: isGuard ? 14 : 12, h: 22,
         vx: isGuard ? 0 : (s.dir || 1) * 0.38, vy: 0, hp: 999, maxHp: 999, dir: s.dir || 1,
-        walkTimer: isGuard ? 999999 : (70 + Math.random() * 50), isFriendly: true, hurtTimer: 0
-      });
+        walkTimer: isGuard ? 999999 : (70 + Math.random() * 50), isFriendly: true, hurtTimer: 0,
+        stationary: !!s.stationary,
+        blocksPassage: !!s.blocksPassage, blockUntilAbility: s.blockUntilAbility || null
+      };
+      snapToGround(npc);
+      enemies.push(npc);
     } else if (s.type === 'skeleton') {
-      enemies.push({
+      const sk = {
         type: 'skeleton', x: s.x, y: s.y, w: 14, h: 22,
         vx: 0.7, vy: 0, hp: 30, maxHp: 30, dir: -1,
         attackTelegraph: 0, lungeTimer: 0, hurtTimer: 0
-      });
+      };
+      snapToGround(sk);
+      enemies.push(sk);
     } else if (s.type === 'bat') {
       enemies.push({
         type: 'bat', x: s.x, y: s.y, baseY: s.y, w: 14, h: 12,
         vx: 0, vy: 0, hp: 20, maxHp: 20, active: false, t: Math.random() * 6, hurtTimer: 0
       });
     } else if (s.type === 'armor') {
-      enemies.push({
+      const arm = {
         type: 'armor', x: s.x, y: s.y, w: 18, h: 26,
-        vx: 0.4, vy: 0, hp: 65, maxHp: 65, dir: -1, hurtTimer: 0
-      });
-    } else if (['archer', 'bomber', 'summoner', 'shield'].includes(s.type)) {
+        vx: 0.4, vy: 0, hp: s.elite ? 110 : 65, maxHp: s.elite ? 110 : 65, dir: -1, hurtTimer: 0, elite: !!s.elite, name: s.name
+      };
+      snapToGround(arm);
+      enemies.push(arm);
+    } else if (['archer', 'bomber', 'summoner', 'shield', 'duelist', 'trapper', 'beast', 'specter'].includes(s.type)) {
       enemies.push({
         type: s.type, x: s.x, y: s.y, baseY: s.y, w: 16, h: 22,
-        vx: 0, vy: 0, hp: 45, maxHp: 45, dir: -1, hurtTimer: 0,
-        actionTimer: 75, elite: true
+        vx: 0, vy: 0, hp: s.type === 'beast' ? 80 : 45, maxHp: s.type === 'beast' ? 80 : 45, dir: -1, hurtTimer: 0,
+        actionTimer: 75, elite: !!s.elite, name: s.name, baseX: s.x
       });
     } else if (s.type === 'boss' && !gameWon && (!s.sealId || !seals[s.sealId]) && (!s.isFinal || allSealsRestored())) {
+      const bossId = s.isFinal ? 'malakor' : (s.sealId || 'carmesi');
+      const identity = BOSS_IDENTITIES[bossId];
       enemies.push({
         type: 'boss', name: s.name,
         x: s.x, y: s.y, w: 24, h: 36,
         vx: 0, vy: 0, hp: s.hp || 180, maxHp: s.hp || 180, dir: -1,
-        phaseTimer: 80, pattern: 0, hurtTimer: 0, pillars: [],
-        sealId: s.sealId, sealName: s.sealName, isFinal: !!s.isFinal
+        phaseTimer: 80, pattern: 0, attackStep: -1, attackOrder: BOSS_ATTACK_ORDERS[bossId], hurtTimer: 0, pillars: [],
+        sealId: s.sealId, sealName: s.sealName, isFinal: !!s.isFinal,
+        bossId, bossColor: identity.color, phaseName: identity.phaseName, phaseDescription: identity.phaseTwo,
+        entryTimer: 75, arenaTimer: 130, arenaName: identity.arena
       });
-    }
-  }
-}
-
-// Utilidades de Colisión y Mapa
-function getTileAt(col, row) {
-  if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return '#';
-  const key = `${currentRoomId}_${col}_${row}`;
-  if (brokenWalls[key]) return '.';
-  const map = ROOM_DEFS[currentRoomId].map;
-  return map[row][col];
-}
-
-function isSolidTile(ch) {
-  if (ch === '#' || ch === '?') return true;
-  if (ch === 'B' && player.dashTimer <= 0) return true;
-  return false;
-}
-
-function aabb(a, b) {
-  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-}
-
-function spawnParticles(x, y, color, count = 8) {
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x, y,
-      vx: (Math.random() - 0.5) * 3.5,
-      vy: (Math.random() - 0.5) * 3.5 - 0.5,
-      life: 18 + Math.random() * 12,
-      color
-    });
-  }
-}
-
-function moveWithCollisions(ent, isPlayer = false) {
-  if (isPlayer) player.wallDir = 0;
-
-  // Resolución en Eje X
-  ent.x += ent.vx;
-  let left = Math.floor(ent.x / TILE);
-  let right = Math.floor((ent.x + ent.w - 0.01) / TILE);
-  let top = Math.floor(ent.y / TILE);
-  let bottom = Math.floor((ent.y + ent.h - 0.01) / TILE);
-
-  for (let r = top; r <= bottom; r++) {
-    for (let c = left; c <= right; c++) {
-      const ch = getTileAt(c, r);
-      if (isSolidTile(ch)) {
-        if (ent.vx > 0) {
-          ent.x = c * TILE - ent.w;
-          if (isPlayer) player.wallDir = 1; // Tocando muro derecho
-        } else if (ent.vx < 0) {
-          ent.x = (c + 1) * TILE;
-          if (isPlayer) player.wallDir = -1; // Tocando muro izquierdo
-        }
-        ent.vx = 0;
-        left = Math.floor(ent.x / TILE);
-        right = Math.floor((ent.x + ent.w - 0.01) / TILE);
-      }
+      setTimeout(() => {
+        sfx('boss_entry');
+        showBanner(`⚔ ${s.name.toUpperCase()} EMERGE EN LA ARENA ⚔`, 105);
+        spawnParticles(s.x + 12, s.y + 18, identity.color, 28);
+      }, 90);
     }
   }
 
-  // Resolución en Eje Y
-  const prevBottom = ent.y + ent.h;
-  ent.y += ent.vy;
-  ent.onGround = false;
-
-  left = Math.floor(ent.x / TILE);
-  right = Math.floor((ent.x + ent.w - 0.01) / TILE);
-  top = Math.floor(ent.y / TILE);
-  bottom = Math.floor((ent.y + ent.h - 0.01) / TILE);
-
-  for (let r = top; r <= bottom; r++) {
-    for (let c = left; c <= right; c++) {
-      const ch = getTileAt(c, r);
-      if (isSolidTile(ch)) {
-        if (ent.vy > 0) {
-          ent.y = r * TILE - ent.h;
-          ent.vy = 0;
-          ent.onGround = true;
-        } else if (ent.vy < 0) {
-          ent.y = (r + 1) * TILE;
-          ent.vy = 0;
-        }
-        top = Math.floor(ent.y / TILE);
-        bottom = Math.floor((ent.y + ent.h - 0.01) / TILE);
-      } else if (ch === '=' && ent.vy >= 0) {
-        const platTop = r * TILE;
-        const dropIgnore = isPlayer && player.dropThroughTimer > 0;
-        if (!dropIgnore && prevBottom <= platTop + 2 && ent.y + ent.h >= platTop) {
-          ent.y = platTop - ent.h;
-          ent.vy = 0;
-          ent.onGround = true;
-        }
-      }
-    }
+  const travelerRooms = sealCount() >= 3 ? [10, 36] : (sealCount() >= 1 ? [9, 34] : [-2, 31]);
+  if (travelerRooms.includes(Number(id))) {
+    const traveler = { type: 'citizen', isGuard: false, isFriendly: true, name: 'Viajero de los Sellos', dialog: `«He seguido la luz de tus ${sealCount()} sello(s). La siguiente ciudad ya conoce tu nombre.»`, x: 430, y: 200, w: 12, h: 22, vx: 0, vy: 0, dir: -1, walkTimer: 999999, hp: 999, maxHp: 999, hurtTimer: 0 };
+    snapToGround(traveler);
+    enemies.push(traveler);
   }
-}
-
-function damagePlayer(amount, sourceX) {
-  if (player.invulnTimer > 0 || player.dashTimer > 0) return;
-  const finalDmg = player.damageReduction ? Math.max(1, Math.round(amount * (1 - player.damageReduction))) : amount;
-  player.hp = Math.max(0, player.hp - finalDmg);
-  player.invulnTimer = 45;
-  player.vy = -3.2;
-  player.vx = (player.x + player.w / 2 < sourceX) ? -3.5 : 3.5;
-  triggerShake(12, 3.5); // Temblor de pantalla al recibir daño
-  sfx('hit');
-  spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#e63946', 12);
-
-  if (player.hp <= 0) {
-    showBanner("HAS CAÍDO... RENACIENDO EN EL ALTAR", 140);
-    respawnFrames = 2;
-    hitStopTimer = 0;
-    player.dashTimer = 0;
-    player.attackTimer = 0;
-    player.attackCooldown = 0;
-    player.castCooldown = 0;
-    player.vx = 0;
-    player.vy = 0;
-    projectiles = [];
-    particles = [];
-    player.hp = player.maxHp;
-    const saved = localStorage.getItem('noctis_save');
-    if (saved) {
-      const d = JSON.parse(saved);
-      player.hasDash = d.hasDash;
-      player.hasDoubleJump = d.hasDoubleJump;
-      player.hasWallJump = d.hasWallJump;
-      player.essence = d.essence || 0;
-      player.maxHp = d.maxHp || 100;
-      player.hp = player.maxHp;
-      player.atk = d.atk || 15;
-      player.hpUpgrades = d.hpUpgrades || 0;
-      player.atkUpgrades = d.atkUpgrades || 0;
-      player.attackReach = d.attackReach || 0;
-      player.spellPower = d.spellPower || 0;
-      player.spellEfficiency = d.spellEfficiency || 0;
-      player.dashRecovery = d.dashRecovery || 0;
-      player.healBonus = d.healBonus || 0;
-      seals = { carmesi: false, juramento: false, astral: false, reloj: false, ...(d.seals || {}) };
-      storyProgress = { eliteKills: 0, talkedHubs: {}, discoveredAltars: {}, ...(d.storyProgress || {}) };
-      const spawnRoom = ROOM_DEFS[d.roomId] ? d.roomId : -2;
-      const spawnX = Number.isFinite(d.x) ? d.x : 45;
-      const spawnY = Number.isFinite(d.y) ? d.y : 200;
-      loadRoom(spawnRoom, spawnX, spawnY);
-    } else {
-      loadRoom(1, 45, 200);
-    }
-  }
-}
-
-function updatePlayer(keys, justPressed) {
-  if (respawnFrames > 0) {
-    respawnFrames--;
-    return;
-  }
-  player.animTimer++;
-  if (player.invulnTimer > 0) player.invulnTimer--;
-  if (player.dashCooldown > 0) player.dashCooldown--;
-  if (player.attackCooldown > 0) player.attackCooldown--;
-  if (player.castCooldown > 0) player.castCooldown--;
-  if (player.dropThroughTimer > 0) player.dropThroughTimer--;
-
-  const leftKey = keys['a'] || keys['arrowleft'];
-  const rightKey = keys['d'] || keys['arrowright'];
-  const downKey = keys['s'] || keys['arrowdown'];
-  const jumpPressed = justPressed['w'] || justPressed[' '] || justPressed['z'] || justPressed['arrowup'];
-  const jumpHeld = keys['w'] || keys[' '] || keys['z'] || keys['arrowup'];
-  const attackPressed = justPressed['mouseLeft'];
-  const castPressed = justPressed['mouseRight'] || justPressed['q'];
-  const dashPressed = justPressed['shiftleft'] || justPressed['shift'];
-  const hookPressed = justPressed['f'];
-
-  // RELIQUIA: Forma de Bruma (S + Shift)
-  if (player.hasMist && downKey && dashPressed && player.mistCooldown <= 0 && player.mistTimer <= 0) {
-    player.mistTimer = 45; // ~0.75s de forma intangible
-    player.mistCooldown = 90;
-    player.invulnTimer = 50;
-    sfx('dash');
-    showBanner("FORMA DE BRUMA ACTIVADA", 60);
-    spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#c77dff', 16);
-  }
-
-  if (player.mistTimer > 0) {
-    player.mistTimer--;
-    player.state = 'MIST';
-    player.vx = player.dir * 4.2;
-    player.vy = 0;
-    spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#7209b7', 2);
-  }
-
-  // RELIQUIA: Gancho de Sombra (Cadena del Condenado - Tecla F)
-  if (hookPressed && player.hasHook && player.hookCooldown <= 0) {
-    player.hookCooldown = 40;
-    player.vy = -7.5; // Impulso vertical / acrobático hacia el techo
-    player.vx = player.dir * 4.8;
-    sfx('dash');
-    showBanner("CADENA DEL CONDENADO", 50);
-    triggerShake(4, 2);
-    // Trazar línea de cadena con partículas ascendentes
-    for (let k = 0; k < 12; k++) {
-      particles.push({
-        x: player.x + player.w / 2 + (Math.random() - 0.5) * 4,
-        y: player.y - k * 6,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: -2,
-        life: 20,
-        color: '#7de2ff'
-      });
-    }
-  }
-
-  // RELIQUIA: Martillo de Sangre / Dive Attack (S + Ataque en el aire)
-  if (player.hasDive && downKey && attackPressed && !player.onGround && !player.diveActive) {
-    player.diveActive = true;
-    player.vy = 8.5; // Caída acelerada en picada
-    player.vx = 0;
-    sfx('cast');
-    showBanner("¡MARTILLO DE SANGRE!", 50);
-    triggerShake(5, 2);
-  }
-
-  if (player.diveActive) {
-    player.vy = 9.5;
-    spawnParticles(player.x + player.w / 2, player.y + player.h, '#ff0055', 4);
-    // Impacto al tocar el suelo
-    if (player.onGround) {
-      player.diveActive = false;
-      triggerShake(12, 5);
-      triggerHitStop(6);
-      sfx('hit');
-      spawnParticles(player.x + player.w / 2, player.y + player.h, '#ef476f', 24);
-      spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffbe0b', 16);
-      // Onda expansiva que daña a enemigos cercanos
-      for (const e of enemies) {
-        if (Math.hypot(e.x - player.x, e.y - player.y) < 70) {
-          e.hp -= Math.round(player.atk * 1.8);
-          e.hurtTimer = 16;
-          e.vy = -3.5;
-          floatingTexts.push({
-            text: `-${Math.round(player.atk * 1.8)}`,
-            x: e.x + e.w / 2,
-            y: e.y - 6,
-            vy: -1.4,
-            life: 30,
-            color: '#ef476f'
-          });
-        }
-      }
-    }
-  }
-
-  // Hechizo Carmesí / Sub-Arma: Lanza de Sangre (Clic Derecho o Q) - Consume 10 Esencia
-  if (castPressed && player.castCooldown <= 0) {
-    const SPELL_COST = Math.max(4, 10 - (player.spellEfficiency || 0));
-    if (player.essence >= SPELL_COST) {
-      player.essence -= SPELL_COST;
-      player.castCooldown = 22;
-      sfx('cast');
-      triggerShake(4, 1.5);
-      projectiles.push({
-        x: player.x + (player.dir === 1 ? player.w + 4 : -4),
-        y: player.y + 10,
-        vx: player.dir * 6.5,
-        vy: 0,
-        r: 3.5,
-        fromPlayer: true,
-        dmg: Math.round(player.atk * 1.4 + (player.spellPower || 0))
-      });
-      spawnParticles(player.x + (player.dir === 1 ? player.w : 0), player.y + 10, '#ff0055', 8);
-    } else {
-      sfx('hit');
-      showBanner("ESENCIA INSUFICIENTE (Requiere 10 ♦)", 70);
-    }
-  }
-
-  // Habilidad: Dash Sombrío
-  if (dashPressed && !downKey && player.hasDash && player.dashCooldown <= 0 && player.dashTimer <= 0) {
-    player.dashTimer = 11;
-    player.dashCooldown = Math.max(12, 32 - (player.dashRecovery || 0));
-    player.vy = 0;
-    player.vx = player.dir * 6.5;
-    sfx('dash');
-    spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#9d4edd', 10);
-  }
-
-  if (player.dashTimer > 0) {
-    player.dashTimer--;
-    player.vy = 0;
-    player.vx = player.dir * 6.5;
-    player.state = 'DASH';
-    spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#7b2cbf', 2);
-
-    // Permitir Salto durante el Dash (Dash-Jump fluido como en Hollow Knight / Celeste)
-    if (jumpPressed && (player.onGround || player.coyoteTimer > 0 || player.jumpsLeft > 0)) {
-      player.dashTimer = 0; // Terminar el congelamiento vertical del dash
-      player.vy = -6.2;
-      player.vx = player.dir * 5.2; // Salto largo hacia adelante con inercia
-      if (player.onGround || player.coyoteTimer > 0) {
-        player.coyoteTimer = 0;
-        player.jumpsLeft = player.hasDoubleJump ? 1 : 0;
-      } else {
-        player.jumpsLeft--;
-      }
-      sfx('jump');
-      spawnParticles(player.x + player.w / 2, player.y + player.h, '#c77dff', 8);
-    }
-  } else {
-    const speed = 2.2;
-    if (leftKey) {
-      player.vx = -speed;
-      player.dir = -1;
-    } else if (rightKey) {
-      player.vx = speed;
-      player.dir = 1;
-    } else {
-      player.vx *= 0.7;
-      if (Math.abs(player.vx) < 0.1) player.vx = 0;
-    }
-
-    player.vy = Math.min(player.vy + 0.32, 6.5);
-
-    // Deslizamiento en pared (WALL_SLIDE) si tiene las Garras de Gárgola
-    const touchingWall = player.hasWallJump && !player.onGround && player.wallDir !== 0 &&
-                         ((player.wallDir === -1 && leftKey) || (player.wallDir === 1 && rightKey));
-    if (touchingWall && player.vy > 1.2) {
-      player.vy = 1.2; // Cae lento por el muro
-      if (player.animTimer % 8 === 0) sfx('wallslide');
-      spawnParticles(player.x + (player.wallDir === 1 ? player.w : 0), player.y + 10, '#adb5bd', 1);
-    }
-
-    if (player.onGround) {
-      player.coyoteTimer = 6;
-      player.jumpsLeft = player.hasDoubleJump ? 2 : 1;
-    } else if (player.coyoteTimer > 0) {
-      player.coyoteTimer--;
-    }
-
-    if (downKey && jumpPressed && player.onGround) {
-      player.dropThroughTimer = 10;
-      player.onGround = false;
-    } else if (jumpPressed) {
-      if (player.hasWallJump && !player.onGround && player.wallDir !== 0) {
-        // ¡Salto en Pared (Wall Jump)!
-        player.vy = -6.0;
-        player.vx = -player.wallDir * 4.2;
-        player.dir = -player.wallDir;
-        sfx('jump');
-        spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#00bbf9', 10);
-      } else if (player.coyoteTimer > 0) {
-        player.vy = -6.2;
-        player.coyoteTimer = 0;
-        player.jumpsLeft = player.hasDoubleJump ? 1 : 0;
-        sfx('jump');
-      } else if (player.jumpsLeft > 0) {
-        player.vy = -5.8;
-        player.jumpsLeft--;
-        sfx('jump');
-        spawnParticles(player.x + player.w / 2, player.y + player.h, '#c77dff', 8);
-      }
-    }
-
-    if (!jumpHeld && player.vy < -2.2) {
-      player.vy *= 0.65;
-    }
-
-    if (attackPressed && player.attackCooldown <= 0) {
-      player.attackTimer = 12;
-      player.attackCooldown = 18;
-      player.attackDir = (downKey && !player.onGround) ? 'down' : 'forward';
-      player.attackHitRegistered = false;
-      sfx('sword');
-    }
-
-    if (player.attackTimer > 0) {
-      player.attackTimer--;
-      player.state = 'ATTACK';
-    } else if (!player.onGround) {
-      player.state = player.vy < 0 ? 'JUMP' : 'FALL';
-    } else if (Math.abs(player.vx) > 0.2) {
-      player.state = 'RUN';
-    } else {
-      player.state = 'IDLE';
-    }
-  }
-
-  moveWithCollisions(player, true);
-
-  // Interacción con el entorno
-  const cx = Math.floor((player.x + player.w / 2) / TILE);
-  const cy = Math.floor((player.y + player.h / 2) / TILE);
-  const footRow = Math.floor((player.y + player.h - 1) / TILE);
-  const footTile = getTileAt(cx, footRow);
-
-  // Daño por pinchos (a menos que ejecute un Down-Slash / Pogo con éxito)
-  const isPogoSlash = player.attackTimer > 2 && player.attackDir === 'down';
-  if (footTile === '^') {
-    if (isPogoSlash) {
-      // ¡Pogo Jump exitoso sobre pinchos!
-      player.vy = -6.4;
-      player.jumpsLeft = player.hasDoubleJump ? 1 : 0;
-      sfx('hit');
-      triggerShake(6, 2);
-      triggerHitStop(3);
-      spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffffff', 10);
-      spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffbe0b', 8);
-    } else {
-      damagePlayer(20, cx * TILE + 8);
-    }
-  }
-
-  // Interacción con el Altar: E (Guardar/Curar), 1 (Mejorar Vida), 2 (Mejorar Espada)
-  const isAtAltar = (getTileAt(cx, cy) === 'S' || getTileAt(cx, footRow) === 'S');
-  if (isAtAltar) {
-    const hpCost = 30 + player.hpUpgrades * 25;
-    const atkCost = 40 + player.atkUpgrades * 30;
-
-    if (justPressed['e']) {
-      storyProgress.discoveredAltars[currentRoomId] = true;
-      player.hp = player.maxHp;
-      saveProgress();
-      sfx('relic');
-      showBanner(`GUARDADO | [1] +25 HP | [2] +5 ATK | [T] Viaje rápido`, 220);
-      spawnParticles(player.x + 6, player.y + 10, '#ffbe0b', 16);
-    } else if (justPressed['t']) {
-      const altarRooms = Object.keys(storyProgress.discoveredAltars).map(Number).filter(id => id !== currentRoomId);
-      if (altarRooms.length) {
-        const destination = altarRooms[0];
-        sfx('relic');
-        triggerShake(10, 3);
-        spawnParticles(player.x + 6, player.y + 10, '#c77dff', 25);
-        loadRoom(destination, 235, 200);
-        showBanner(`✦ VIAJE RÁPIDO: ${ROOM_DEFS[destination].name.toUpperCase()} ✦`, 150);
-        return;
-      } else {
-        showBanner("ACTIVA OTRO ALTAR PARA DESBLOQUEAR VIAJE RÁPIDO", 120);
-      }
-    } else if (justPressed['1']) {
-      if (player.essence >= hpCost) {
-        player.essence -= hpCost;
-        player.hpUpgrades++;
-        player.maxHp += 25;
-        player.hp = player.maxHp;
-        saveProgress();
-        sfx('relic');
-        showBanner(`¡VIDA MEJORADA A ${player.maxHp} HP!`, 140);
-        spawnParticles(player.x + 6, player.y + 10, '#00f5d4', 20);
-      } else {
-        sfx('hit');
-        showBanner(`ESENCIA INSUFICIENTE: Necesitas ${hpCost} ♦ para mejorar HP`, 120);
-      }
-    } else if (justPressed['2']) {
-      if (player.essence >= atkCost) {
-        player.essence -= atkCost;
-        player.atkUpgrades++;
-        player.atk += 5;
-        saveProgress();
-        sfx('relic');
-        showBanner(`¡FILO CARMESÍ MEJORADO A ${player.atk} ATK!`, 140);
-        spawnParticles(player.x + 6, player.y + 10, '#ff0055', 20);
-      } else {
-        sfx('hit');
-        showBanner(`ESENCIA INSUFICIENTE: Necesitas ${atkCost} ♦ para mejorar ATK`, 120);
-      }
-    }
-  }
-
-  // Interacción con Espejo de Sangre 'T' en Sala 07
-  const isAtMirror = (getTileAt(cx, cy) === 'T' || getTileAt(cx, footRow) === 'T');
-  if (isAtMirror) {
-    if (justPressed['e'] || justPressed['t']) {
-      sfx('relic');
-      triggerShake(10, 3);
-      spawnParticles(player.x + 6, player.y + 10, '#c77dff', 25);
-      loadRoom(2, 235, 200); // Teletransporta de vuelta al Altar del Gran Vestíbulo
-      showBanner("✦ TELETRANSPORTE AL ALTAR DEL GRAN VESTÍBULO (SALA 02) ✦", 150);
-      return;
-    }
-  }
-
-  // Transiciones entre habitaciones y puertas de progreso.
-  const doors = ROOM_DEFS[currentRoomId].doors;
-  const useDoor = (door) => {
-    if (door.requiresAllSeals && !allSealsRestored()) {
-      showBanner(`EL SANTUARIO DEL ECLIPSE EXIGE LOS 4 SELLOS (${sealCount()}/4)`, 180);
-      return true;
-    }
-    if (door.requiresAbility && !player[door.requiresAbility]) {
-      showBanner(`RUTA BLOQUEADA: REQUIERE ${door.requiresLabel}`, 150);
-      // Empujar ligeramente al jugador hacia adentro para que no se quede pegado al borde
-      if (player.x < 14) {
-        player.x = 14;
-        player.vx = 0;
-      }
-      return true;
-    }
-    loadRoom(door.to, door.x, door.y);
-    return true;
-  };
-  if (player.x + player.w > W - 6 && doors.right) {
-    useDoor(doors.right);
-    return;
-  }
-
-  const isAtForge = (getTileAt(cx, cy) === 'F' || getTileAt(cx, footRow) === 'F');
-  if (isAtForge) {
-    for (const [key, upgrade] of Object.entries(FORGE_UPGRADES)) {
-      if (!justPressed[key]) continue;
-      if (player.essence < upgrade.cost) showBanner(`ESENCIA INSUFICIENTE (${upgrade.cost} ♦)`, 100);
-      else {
-        player.essence -= upgrade.cost;
-        upgrade.buy();
-        sfx('relic');
-        showBanner(`BOROS FORJA: ${upgrade.label.toUpperCase()}`, 150);
-      }
-      break;
-    }
-  }
-  if (player.x < 6 && doors.left && player.y > 140) {
-    useDoor(doors.left);
-    return;
-  }
-  if (player.x < 6 && doors.westUpper && player.y <= 140) {
-    useDoor(doors.westUpper);
-    return;
-  }
-  if (player.y < 10 && doors.up) {
-    useDoor(doors.up);
-    return;
-  }
-  if (player.y + player.h > H - 10 && doors.down) {
-    useDoor(doors.down);
-    return;
-  }
-
-  // Combate con espada (Frontal o Hacia Abajo / Pogo Jump)
-  if (player.attackTimer > 3 && player.attackTimer < 10) {
-    const isDown = player.attackDir === 'down';
-    const swordBox = isDown
-      ? {
-          x: player.x - 4,
-          y: player.y + player.h - 2,
-          w: player.w + 8,
-          h: 18
-        }
-      : {
-          x: player.dir === 1 ? player.x + player.w : player.x - (22 + player.attackReach),
-          y: player.y + 2,
-          w: 22 + player.attackReach,
-          h: 18
-        };
-
-    // Combate con espada (Frontal o Hacia Abajo / Pogo Jump)
-    // PARREAR PROYECTILES ENEMIGOS: si tu espada corta una bola enemiga, ¡la desvías!
-    for (let k = projectiles.length - 1; k >= 0; k--) {
-      const prj = projectiles[k];
-      if (!prj.fromPlayer && aabb(swordBox, { x: prj.x - prj.r, y: prj.y - prj.r, w: prj.r * 2, h: prj.r * 2 })) {
-        prj.fromPlayer = true;
-        prj.vx = -prj.vx * (player.hasParryBrooch ? 2.4 : 1.6);
-        prj.vy = (Math.random() - 0.5) * 1.5;
-        prj.dmg = player.atk * (player.hasParryBrooch ? 4.5 : 2.5); // El proyectil desviado causa daño masivo
-        sfx('parry');
-        triggerShake(player.hasParryBrooch ? 12 : 8, player.hasParryBrooch ? 4 : 3);
-        triggerHitStop(player.hasParryBrooch ? 8 : 5);
-        floatingTexts.push({
-          text: player.hasParryBrooch ? "¡CONTRAGOLPE CRÍTICO!" : "¡PARRY!",
-          x: prj.x - 24,
-          y: prj.y - 12,
-          vy: -1.2,
-          life: 35,
-          color: player.hasParryBrooch ? '#06d6a0' : '#ffbe0b'
-        });
-        spawnParticles(prj.x, prj.y, player.hasParryBrooch ? '#06d6a0' : '#ffbe0b', 18);
-        spawnParticles(prj.x, prj.y, '#ffffff', 10);
-      }
-    }
-
-    for (let i = enemies.length - 1; i >= 0; i--) {
-      const e = enemies[i];
-      if (e.hurtTimer <= 0 && aabb(swordBox, e)) {
-        if (!isDown && e.type === 'armor' && e.dir !== player.dir) {
-          sfx('hit');
-          spawnParticles(swordBox.x + 10, swordBox.y + 8, '#adb5bd', 5);
-          continue;
-        }
-        e.hp -= player.atk; // <-- Usa el daño mejorable de Alaric
-        e.hurtTimer = 12;
-        triggerShake(6, 2); // Temblor leve al golpear
-        triggerHitStop(e.type === 'boss' ? 5 : 3); // <-- NUEVO: Hit-Stop / Frame Freeze de impacto
-        
-        // Empuje (Knockback) o Rebote Pogo
-        if (isDown) {
-          // ¡Rebote hacia arriba (Pogo Jump) al golpear enemigo desde arriba!
-          player.vy = -6.4;
-          player.jumpsLeft = player.hasDoubleJump ? 1 : 0; // Restaura opción de salto aéreo
-          e.vy = 2.0; // Aplasta al enemigo contra el suelo
-          spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffffff', 8);
-        } else {
-          const kbForce = e.type === 'boss' ? 0.8 : (e.type === 'armor' ? 1.6 : 3.2);
-          e.knockbackX = player.dir * kbForce;
-          if (e.type !== 'boss') e.vy = -1.8;
-        }
-        
-        // NUEVO: Texto de daño flotante
-        floatingTexts.push({
-          text: `-${player.atk}`,
-          x: e.x + e.w / 2 - 4,
-          y: e.y - 4,
-          vy: -1.2,
-          life: 25
-        });
-
-        sfx('hit');
-        spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ff0055', 8);
-        if (e.hp <= 0) {
-          if (e.elite) storyProgress.eliteKills++;
-          spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ffbe0b', 18);
-
-          // NUEVO: Soltar Orbes de Esencia según el tipo de enemigo
-          const orbCount = e.type === 'boss' ? 20 : (e.type === 'armor' ? 5 : (e.type === 'skeleton' ? 3 : 2));
-          for (let k = 0; k < orbCount; k++) {
-            essenceOrbs.push({
-              x: e.x + e.w / 2,
-              y: e.y + e.h / 2,
-              w: 5, h: 5,
-              vx: (Math.random() - 0.5) * 4,
-              vy: -Math.random() * 3.5 - 1,
-              val: 5 // Cada orbe vale 5 de Esencia
-            });
-          }
-
-          // Probabilidad de soltar Corazón de Vida (35% enemigos normales, 100% jefe)
-          const dropChance = e.type === 'boss' ? 1.0 : 0.35;
-          if (Math.random() < dropChance) {
-            heartPickups.push({
-              x: e.x + e.w / 2 - 3,
-              y: e.y + e.h / 2 - 3,
-              w: 8, h: 8,
-              vx: (Math.random() - 0.5) * 2,
-              vy: -2.8,
-              heal: 25
-            });
-          }
-
-          if (e.type === 'boss') defeatBoss(e);
-          enemies.splice(i, 1);
-        }
-      }
-    }
-
-    // Interacción de espada con Muros Secretos Rompibles ('?')
-    if (!player.attackHitRegistered) {
-      const minCol = Math.floor(swordBox.x / TILE);
-      const maxCol = Math.floor((swordBox.x + swordBox.w) / TILE);
-      const minRow = Math.floor(swordBox.y / TILE);
-      const maxRow = Math.floor((swordBox.y + swordBox.h) / TILE);
-
-      for (let r = minRow; r <= maxRow; r++) {
-        for (let c = minCol; c <= maxCol; c++) {
-          if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
-          const key = `${currentRoomId}_${c}_${r}`;
-          if (brokenWalls[key]) continue;
-
-          const rawTile = ROOM_DEFS[currentRoomId].map[r][c];
-          if (rawTile === '?') {
-            player.attackHitRegistered = true;
-            if (breakableWallHits[key] === undefined) breakableWallHits[key] = 3;
-            breakableWallHits[key]--;
-
-            const tileCenterX = c * TILE + TILE / 2;
-            const tileCenterY = r * TILE + TILE / 2;
-
-            if (breakableWallHits[key] <= 0) {
-              // ¡Muro destruido por completo!
-              brokenWalls[key] = true;
-              sfx('crumble');
-              triggerShake(10, 4);
-              triggerHitStop(4);
-              floatingTexts.push({
-                text: "¡SECRETO REVELADO!",
-                x: tileCenterX - 35,
-                y: tileCenterY - 14,
-                vy: -1.0,
-                life: 45
-              });
-
-              // Escombros masivos volando
-              for (let k = 0; k < 18; k++) {
-                particles.push({
-                  x: tileCenterX,
-                  y: tileCenterY,
-                  vx: (Math.random() - 0.5) * 5,
-                  vy: -Math.random() * 4 - 1,
-                  life: 25 + Math.random() * 15,
-                  color: ['#4a3b5c', '#7209b7', '#adb5bd', '#332447'][Math.floor(Math.random() * 4)]
-                });
-              }
-
-              // Recompensa: Alijo Gigante de Esencia (8 orbes = 40 de esencia) + Corazón
-              for (let k = 0; k < 8; k++) {
-                essenceOrbs.push({
-                  x: tileCenterX,
-                  y: tileCenterY,
-                  w: 5, h: 5,
-                  vx: (Math.random() - 0.5) * 4.5,
-                  vy: -Math.random() * 3.5 - 1.5,
-                  val: 5
-                });
-              }
-              heartPickups.push({
-                x: tileCenterX - 4,
-                y: tileCenterY - 4,
-                w: 8, h: 8,
-                vx: (Math.random() - 0.5) * 2,
-                vy: -3.2,
-                heal: 35
-              });
-            } else {
-              // Golpe al muro: se agrieta más
-              sfx('hit');
-              triggerShake(5, 2);
-              triggerHitStop(2);
-              floatingTexts.push({
-                text: `${breakableWallHits[key]} golpes restantes`,
-                x: tileCenterX - 30,
-                y: tileCenterY - 10,
-                vy: -0.8,
-                life: 25
-              });
-              // Polvo y pequeñas esquirlas
-              spawnParticles(tileCenterX, tileCenterY, '#7209b7', 8);
-              spawnParticles(tileCenterX, tileCenterY, '#adb5bd', 6);
-            }
-            break;
-          }
-        }
-        if (player.attackHitRegistered) break;
-      }
-    }
-  }
-
-  // Recolección de Reliquias
-  for (let i = relics.length - 1; i >= 0; i--) {
-    const r = relics[i];
-    if (aabb(player, r)) {
-      if (r.type === 'dash') player.hasDash = true;
-      if (r.type === 'doublejump') player.hasDoubleJump = true;
-      if (r.type === 'walljump') player.hasWallJump = true;
-      if (r.type === 'hook') player.hasHook = true;
-      if (r.type === 'mist') player.hasMist = true;
-      if (r.type === 'dive') player.hasDive = true;
-      if (r.type === 'astraleye') player.hasAstralEye = true;
-      if (r.type === 'parrybrooch') player.hasParryBrooch = true;
-      sfx('relic');
-      showBanner("RELIQUIA OBTENIDA: " + r.name, 190);
-      spawnParticles(r.x + 7, r.y + 7, '#00f5d4', 24);
-      if (typeof showSkillTutorial === 'function') {
-        showSkillTutorial(r.type);
-      }
-      relics.splice(i, 1);
-    }
-  }
-}
-
-function updateEnemies() {
-  if (respawnFrames > 0) return;
-  for (const e of enemies) {
-    if (e.hurtTimer > 0) e.hurtTimer--;
-
-    if (e.type === 'citizen') {
-      // Ciudadano pacífico paseando de lado a lado por la calle
-      e.vy = Math.min(e.vy + 0.32, 6);
-      e.walkTimer--;
-      if (e.walkTimer <= 0) {
-        e.dir = -e.dir;
-        e.vx = e.dir * (0.35 + Math.random() * 0.2);
-        e.walkTimer = 90 + Math.random() * 80;
-      }
-      // No salir de la habitación
-      if (e.x < 30) { e.dir = 1; e.vx = 0.45; }
-      if (e.x > W - 50) { e.dir = -1; e.vx = -0.45; }
-      moveWithCollisions(e);
-      continue; // No atacan ni dañan
-    }
-
-    if (e.type === 'skeleton') {
-      e.vy = Math.min(e.vy + 0.32, 6);
-      const dist = Math.hypot((player.x - e.x), (player.y - e.y));
-
-      // Aplicar retroceso de impacto
-      if (e.knockbackX) {
-        e.vx = e.knockbackX;
-        e.knockbackX *= 0.82;
-        if (Math.abs(e.knockbackX) < 0.1) e.knockbackX = 0;
-      } else if (e.lungeTimer > 0) {
-        e.lungeTimer--;
-        e.vx = e.dir * 3.2;
-      } else if (e.attackTelegraph > 0) {
-        e.attackTelegraph--;
-        e.vx = 0;
-        if (e.attackTelegraph === 0) e.lungeTimer = 14;
-      } else if (dist < 75 && Math.abs(player.y - e.y) < 24) {
-        e.dir = player.x < e.x ? -1 : 1;
-        e.attackTelegraph = 25;
-      } else {
-        e.vx = e.dir * 0.75;
-        const aheadCol = Math.floor((e.x + (e.dir > 0 ? e.w + 2 : -2)) / TILE);
-        const footRow = Math.floor((e.y + e.h + 2) / TILE);
-        const wallCol = getTileAt(aheadCol, Math.floor((e.y + 8) / TILE));
-        const floorBelow = getTileAt(aheadCol, footRow);
-        if (wallCol === '#' || (floorBelow === '.' || floorBelow === '^')) {
-          e.dir *= -1;
-        }
-      }
-      moveWithCollisions(e);
-    } else if (e.type === 'bat') {
-      const dist = Math.hypot(player.x - e.x, player.y - e.y);
-      if (!e.active && dist < 150) e.active = true;
-      if (e.active) {
-        if (e.knockbackX) {
-          e.x += e.knockbackX;
-          e.knockbackX *= 0.85;
-          if (Math.abs(e.knockbackX) < 0.1) e.knockbackX = 0;
-        } else {
-          e.t += 0.1;
-          e.dir = player.x < e.x ? -1 : 1;
-          e.x += e.dir * 1.1;
-          e.y = e.baseY + 35 + Math.sin(e.t) * 26;
-        }
-      }
-    } else if (e.type === 'armor') {
-      e.vy = Math.min(e.vy + 0.32, 6);
-      if (e.knockbackX) {
-        e.vx = e.knockbackX;
-        e.knockbackX *= 0.8;
-        if (Math.abs(e.knockbackX) < 0.1) e.knockbackX = 0;
-      } else {
-        e.dir = player.x < e.x ? -1 : 1;
-        e.vx = e.dir * 0.45;
-      }
-      moveWithCollisions(e);
-    } else if (e.type === 'archer') {
-      e.vy = Math.min(e.vy + 0.32, 6);
-      e.dir = player.x < e.x ? -1 : 1;
-      if (--e.actionTimer <= 0) {
-        e.actionTimer = 95;
-        projectiles.push({ x: e.x + 8, y: e.y + 10, vx: e.dir * 3.4, vy: -0.4, r: 3 });
-      }
-      moveWithCollisions(e);
-    } else if (e.type === 'bomber') {
-      e.vy = Math.min(e.vy + 0.32, 6);
-      e.dir = player.x < e.x ? -1 : 1;
-      e.vx = e.dir * 0.9;
-      moveWithCollisions(e);
-      if (Math.hypot(player.x - e.x, player.y - e.y) < 20) {
-        damagePlayer(28, e.x);
-        e.x = -100;
-        e.hp = 0;
-      }
-    } else if (e.type === 'summoner') {
-      e.t = (e.t || 0) + 0.08;
-      e.y = e.baseY + Math.sin(e.t) * 8;
-      if (--e.actionTimer <= 0) {
-        e.actionTimer = 150;
-        enemies.push({ type: 'bat', x: e.x, y: e.y, baseY: e.y, w: 14, h: 12, vx: 0, vy: 0, hp: 20, maxHp: 20, active: true, t: 0, hurtTimer: 0 });
-      }
-    } else if (e.type === 'shield') {
-      e.vy = Math.min(e.vy + 0.32, 6);
-      e.dir = player.x < e.x ? -1 : 1;
-      e.vx = e.dir * 0.3;
-      moveWithCollisions(e);
-    } else if (e.type === 'boss') {
-      // COMPROBACIÓN FASE 2: LORD MALAKOR DESATADO (<= 50% HP)
-      if (!e.phase2 && e.hp <= e.maxHp * 0.5) {
-        e.phase2 = true;
-        e.phaseTimer = 100;
-        e.pattern = 3; // Patrón de transformación / rugido
-        sfx('relic');
-        triggerShake(20, 5);
-        triggerHitStop(10);
-        showBanner("¡LORD MALAKOR HA DESATADO EL ECLIPSE CARMESÍ!", 180);
-        floatingTexts.push({
-          text: "¡FASE 2: FURIA DEL ECLIPSE!",
-          x: e.x - 45,
-          y: e.y - 18,
-          vy: -1.0,
-          life: 55,
-          color: '#ff0055'
-        });
-        // Explosión de aura oscura
-        for (let k = 0; k < 25; k++) {
-          spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ff0055', 2);
-          spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ffbe0b', 2);
-        }
-      }
-
-      e.vy = Math.min(e.vy + 0.32, 6);
-      if (e.knockbackX) {
-        e.x += e.knockbackX;
-        e.knockbackX *= 0.8;
-        if (Math.abs(e.knockbackX) < 0.1) e.knockbackX = 0;
-      }
-      e.phaseTimer--;
-
-      if (e.phaseTimer <= 0) {
-        // En Fase 2 los patrones van de 0 a 3 (incluyendo cometas aéreos) y los intervalos son más rápidos
-        const maxPatterns = e.phase2 ? 4 : 3;
-        e.pattern = (e.pattern + 1) % maxPatterns;
-        e.dir = player.x < e.x ? -1 : 1;
-
-        if (e.pattern === 0) {
-          // Ráfaga de proyectiles (3 en fase 1, 5 en fase 2)
-          e.vx = 0;
-          e.phaseTimer = e.phase2 ? 70 : 95;
-          const angles = e.phase2 ? [-0.35, -0.18, 0, 0.18, 0.35] : [-0.25, 0, 0.25];
-          for (const a of angles) {
-            const baseAngle = Math.atan2((player.y + 10) - (e.y + 15), (player.x + 6) - (e.x + 12)) + a;
-            const spd = e.phase2 ? 3.6 : 2.8;
-            projectiles.push({
-              x: e.x + 10, y: e.y + 14,
-              vx: Math.cos(baseAngle) * spd,
-              vy: Math.sin(baseAngle) * spd,
-              r: e.phase2 ? 5 : 4
-            });
-          }
-          sfx('sword');
-        } else if (e.pattern === 1) {
-          // Embestida rápida (más veloz en fase 2)
-          e.vx = e.dir * (e.phase2 ? 5.8 : 4.2);
-          e.phaseTimer = e.phase2 ? 55 : 70;
-          sfx('dash');
-          spawnParticles(e.x, e.y + 16, '#ff0055', 8);
-        } else if (e.pattern === 2) {
-          // Pilares solares del suelo
-          e.x = 228; e.y = 140; e.vx = 0;
-          e.phaseTimer = e.phase2 ? 85 : 110;
-          e.pillars = [70, 140, 210, 280, 350, 410];
-          sfx('relic');
-        } else if (e.pattern === 3 && e.phase2) {
-          // NUEVO ATAQUE FASE 2: Lluvia de Cometas Carmesí en picado desde el cielo
-          e.x = 228; e.y = 80; e.vx = 0;
-          e.phaseTimer = 80;
-          sfx('cast');
-          for (let c = 0; c < 6; c++) {
-            const startX = 60 + c * 60 + (Math.random() - 0.5) * 30;
-            projectiles.push({
-              x: startX,
-              y: 20,
-              vx: (player.x - startX) * 0.02,
-              vy: 3.2 + Math.random() * 1.5,
-              r: 5
-            });
-          }
-        }
-      }
-
-      if (e.pattern === 2 && e.pillars && e.pillars.length > 0) {
-        const hitFrame = e.phase2 ? 30 : 45;
-        if (e.phaseTimer === hitFrame) {
-          sfx('hit');
-          for (const px of e.pillars) {
-            spawnParticles(px, 210, e.phase2 ? '#ff0055' : '#ff5400', 16);
-            if (Math.abs((player.x + 6) - px) < 14 && player.y + player.h > 140) {
-              damagePlayer(e.phase2 ? 30 : 25, px);
-            }
-          }
-        }
-      }
-      moveWithCollisions(e);
-    }
-
-    if (aabb(player, e)) {
-      if (!e.isFriendly) {
-        damagePlayer(15, e.x + e.w / 2);
-      }
-    }
-  }
-
-  for (let i = projectiles.length - 1; i >= 0; i--) {
-    const p = projectiles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    if (p.x < 0 || p.x > W || p.y < 0 || p.y > H) {
-      projectiles.splice(i, 1);
-      continue;
-    }
-
-    if (p.fromPlayer) {
-      // Proyectil disparado por Alaric
-      let hit = false;
-      const pBox = { x: p.x - p.r, y: p.y - p.r, w: p.r * 2, h: p.r * 2 };
-
-      // Impacto con muros y muros rompibles
-      const tileC = Math.floor(p.x / TILE);
-      const tileR = Math.floor(p.y / TILE);
-      const tileAtP = getTileAt(tileC, tileR);
-      if (tileAtP === '?') {
-        const key = `${currentRoomId}_${tileC}_${tileR}`;
-        if (!brokenWalls[key]) {
-          if (breakableWallHits[key] === undefined) breakableWallHits[key] = 3;
-          breakableWallHits[key]--;
-          const tileCenterX = tileC * TILE + TILE / 2;
-          const tileCenterY = tileR * TILE + TILE / 2;
-          if (breakableWallHits[key] <= 0) {
-            brokenWalls[key] = true;
-            sfx('crumble');
-            triggerShake(10, 4);
-            triggerHitStop(4);
-            floatingTexts.push({
-              text: "¡SECRETO REVELADO!",
-              x: tileCenterX - 35,
-              y: tileCenterY - 14,
-              vy: -1.0,
-              life: 45
-            });
-            for (let k = 0; k < 18; k++) {
-              particles.push({
-                x: tileCenterX, y: tileCenterY,
-                vx: (Math.random() - 0.5) * 5,
-                vy: -Math.random() * 4 - 1,
-                life: 25 + Math.random() * 15,
-                color: ['#4a3b5c', '#7209b7', '#adb5bd', '#332447'][Math.floor(Math.random() * 4)]
-              });
-            }
-            for (let k = 0; k < 8; k++) {
-              essenceOrbs.push({
-                x: tileCenterX, y: tileCenterY,
-                w: 5, h: 5,
-                vx: (Math.random() - 0.5) * 4.5,
-                vy: -Math.random() * 3.5 - 1.5,
-                val: 5
-              });
-            }
-            heartPickups.push({
-              x: tileCenterX - 4, y: tileCenterY - 4,
-              w: 8, h: 8,
-              vx: (Math.random() - 0.5) * 2, vy: -3.2,
-              heal: 35
-            });
-          } else {
-            sfx('hit');
-            triggerShake(5, 2);
-            triggerHitStop(2);
-            floatingTexts.push({
-              text: `${breakableWallHits[key]} golpes restantes`,
-              x: tileCenterX - 30, y: tileCenterY - 10,
-              vy: -0.8,
-              life: 25
-            });
-            spawnParticles(tileCenterX, tileCenterY, '#7209b7', 8);
-          }
-          projectiles.splice(i, 1);
-          continue;
-        }
-      } else if (tileAtP === '#') {
-        spawnParticles(p.x, p.y, '#ff0055', 4);
-        projectiles.splice(i, 1);
-        continue;
-      }
-      for (let j = enemies.length - 1; j >= 0; j--) {
-        const e = enemies[j];
-        if (aabb(pBox, e)) {
-          if (e.type === 'armor' && (p.vx > 0 ? e.dir === -1 : e.dir === 1)) {
-            // Escudo frontal de la armadura bloquea
-            sfx('hit');
-            spawnParticles(p.x, p.y, '#adb5bd', 6);
-            hit = true;
-            break;
-          }
-
-          e.hp -= p.dmg;
-          e.hurtTimer = 12;
-          triggerShake(5, 2);
-          triggerHitStop(2);
-          
-          // Empuje por impacto mágico a distancia
-          const kbSpell = e.type === 'boss' ? 0.6 : (e.type === 'armor' ? 1.2 : 2.5);
-          e.knockbackX = (p.vx > 0 ? 1 : -1) * kbSpell;
-          if (e.type !== 'boss') e.vy = -1.4;
-
-          sfx('hit');
-          spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ff0055', 10);
-
-          floatingTexts.push({
-            text: `-${p.dmg}`,
-            x: e.x + e.w / 2 - 4,
-            y: e.y - 6,
-            vy: -1.3,
-            life: 25,
-            color: '#ff007f'
-          });
-
-          if (e.hp <= 0) {
-            if (e.elite) storyProgress.eliteKills++;
-            spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ffbe0b', 18);
-            const orbCount = e.type === 'boss' ? 20 : (e.type === 'armor' ? 5 : (e.type === 'skeleton' ? 3 : 2));
-            for (let k = 0; k < orbCount; k++) {
-              essenceOrbs.push({
-                x: e.x + e.w / 2, y: e.y + e.h / 2,
-                w: 5, h: 5,
-                vx: (Math.random() - 0.5) * 4,
-                vy: -Math.random() * 3.5 - 1,
-                val: 5
-              });
-            }
-            if (Math.random() < (e.type === 'boss' ? 1.0 : 0.35)) {
-              heartPickups.push({
-                x: e.x + e.w / 2 - 3, y: e.y + e.h / 2 - 3,
-                w: 8, h: 8,
-                vx: (Math.random() - 0.5) * 2, vy: -2.8,
-                heal: 25
-              });
-            }
-            if (e.type === 'boss') defeatBoss(e);
-            enemies.splice(j, 1);
-          }
-          hit = true;
-          break;
-        }
-      }
-      if (hit) {
-        projectiles.splice(i, 1);
-        continue;
-      }
-    } else {
-      // Proyectil enemigo hacia Alaric
-      if (aabb(player, { x: p.x - p.r, y: p.y - p.r, w: p.r * 2, h: p.r * 2 })) {
-        damagePlayer(15, p.x);
-        projectiles.splice(i, 1);
-      }
-    }
-  }
-
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const pt = particles[i];
-    pt.x += pt.vx;
-    pt.y += pt.vy;
-    pt.life--;
-    if (pt.life <= 0) particles.splice(i, 1);
-  }
-
-  // Física e imán de Orbes de Esencia
-  for (let i = essenceOrbs.length - 1; i >= 0; i--) {
-    const o = essenceOrbs[i];
-    o.vy = Math.min(o.vy + 0.22, 5);
-    o.vx *= 0.96;
-
-    // Imán hacia Alaric cuando está cerca
-    const dx = (player.x + player.w / 2) - o.x;
-    const dy = (player.y + player.h / 2) - o.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist < 65) {
-      o.vx += (dx / dist) * 0.65;
-      o.vy += (dy / dist) * 0.65;
-    }
-
-    moveWithCollisions(o);
-
-    // Recolectar orbe al tocarlo
-    if (aabb(player, o)) {
-      player.essence += o.val;
-      sfx('orb');
-      spawnParticles(o.x, o.y, '#ff0055', 4);
-      essenceOrbs.splice(i, 1);
-    }
-  }
-
-  // Física y recolección de Corazones de Vida
-  for (let i = heartPickups.length - 1; i >= 0; i--) {
-    const h = heartPickups[i];
-    h.vy = Math.min(h.vy + 0.2, 4.5);
-    h.vx *= 0.95;
-
-    // Imán hacia Alaric cuando está cerca y no tiene la vida al tope
-    const dx = (player.x + player.w / 2) - h.x;
-    const dy = (player.y + player.h / 2) - h.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist < 55) {
-      h.vx += (dx / dist) * 0.55;
-      h.vy += (dy / dist) * 0.55;
-    }
-
-    moveWithCollisions(h);
-
-    if (aabb(player, h)) {
-      const healedAmount = h.heal + player.healBonus;
-      player.hp = Math.min(player.maxHp, player.hp + healedAmount);
-      sfx('heart');
-      floatingTexts.push({
-        text: `+${healedAmount} HP`,
-        x: player.x + player.w / 2 - 8,
-        y: player.y - 6,
-        vy: -1.0,
-        life: 28,
-        color: '#00f5d4'
-      });
-      spawnParticles(h.x + 4, h.y + 4, '#ff0055', 10);
-      spawnParticles(h.x + 4, h.y + 4, '#00f5d4', 6);
-      heartPickups.splice(i, 1);
-    }
-  }
-
-  // Actualizar Textos Flotantes de Daño
-  for (let i = floatingTexts.length - 1; i >= 0; i--) {
-    const ft = floatingTexts[i];
-    ft.y += ft.vy;
-    ft.life--;
-    if (ft.life <= 0) floatingTexts.splice(i, 1);
-  }
-
-  // Actualizar Screen Shake
-  if (screenShakeTimer > 0) screenShakeTimer--;
 }

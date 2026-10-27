@@ -1,8 +1,10 @@
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let actx = null;
+let sfxBus = null, musicBus = null;
+let sfxVolume = 0.8, musicVolume = 0.7;
 
 function initAudio() {
-  if (!actx) actx = new AudioCtx();
+  if (!actx) { actx = new AudioCtx(); sfxBus = actx.createGain(); musicBus = actx.createGain(); sfxBus.connect(actx.destination); musicBus.connect(actx.destination); sfxBus.gain.value = sfxVolume; musicBus.gain.value = musicVolume; }
   if (actx.state === 'suspended') actx.resume();
 }
 
@@ -12,7 +14,7 @@ function sfx(type) {
   const osc = actx.createOscillator();
   const gain = actx.createGain();
   osc.connect(gain);
-  gain.connect(actx.destination);
+  gain.connect(sfxBus || actx.destination);
 
   if (type === 'jump') {
     osc.type = 'square';
@@ -46,6 +48,20 @@ function sfx(type) {
     gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
     osc.start(now);
     osc.stop(now + 0.15);
+  } else if (type === 'bone_hit' || type === 'armor_hit' || type === 'boss_hit') {
+    const hitProfiles = {
+      bone_hit: { wave: 'triangle', start: 520, end: 170, duration: 0.11, volume: 0.1 },
+      armor_hit: { wave: 'square', start: 180, end: 72, duration: 0.16, volume: 0.14 },
+      boss_hit: { wave: 'sawtooth', start: 95, end: 42, duration: 0.2, volume: 0.16 }
+    };
+    const profile = hitProfiles[type];
+    osc.type = profile.wave;
+    osc.frequency.setValueAtTime(profile.start, now);
+    osc.frequency.exponentialRampToValueAtTime(profile.end, now + profile.duration);
+    gain.gain.setValueAtTime(profile.volume, now);
+    gain.gain.linearRampToValueAtTime(0.01, now + profile.duration);
+    osc.start(now);
+    osc.stop(now + profile.duration);
   } else if (type === 'relic') {
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(261.6, now);
@@ -109,6 +125,29 @@ function sfx(type) {
     gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
     osc.start(now);
     osc.stop(now + 0.35);
+  } else if (type.startsWith('step_')) {
+    const footProfiles = {
+      step_stone: { wave: 'triangle', start: 92, end: 58, duration: 0.07, volume: 0.035 },
+      step_wood: { wave: 'square', start: 145, end: 95, duration: 0.06, volume: 0.03 },
+      step_water: { wave: 'sine', start: 118, end: 72, duration: 0.09, volume: 0.04 },
+      step_metal: { wave: 'triangle', start: 235, end: 168, duration: 0.06, volume: 0.03 }
+    };
+    const profile = footProfiles[type] || footProfiles.step_stone;
+    osc.type = profile.wave;
+    osc.frequency.setValueAtTime(profile.start, now);
+    osc.frequency.exponentialRampToValueAtTime(profile.end, now + profile.duration);
+    gain.gain.setValueAtTime(profile.volume, now);
+    gain.gain.linearRampToValueAtTime(0.001, now + profile.duration);
+    osc.start(now);
+    osc.stop(now + profile.duration);
+  } else if (type === 'boss_entry') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(68, now);
+    osc.frequency.exponentialRampToValueAtTime(38, now + 0.7);
+    gain.gain.setValueAtTime(0.16, now);
+    gain.gain.linearRampToValueAtTime(0.001, now + 0.7);
+    osc.start(now);
+    osc.stop(now + 0.7);
   }
 }
 
@@ -161,10 +200,37 @@ function playNote(freq, type, duration, vol) {
   gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
   osc.connect(gain);
-  gain.connect(actx.destination);
+  gain.connect(musicBus || actx.destination);
 
   osc.start(now);
   osc.stop(now + duration);
+}
+
+function playAmbientPad(freq, color = 'triangle') {
+  if (!actx || isMuted || freq <= 0) return;
+  const now = actx.currentTime;
+  const osc = actx.createOscillator();
+  const gain = actx.createGain();
+  osc.type = color;
+  osc.frequency.setValueAtTime(freq, now);
+  osc.frequency.linearRampToValueAtTime(freq * 0.985, now + 1.7);
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.linearRampToValueAtTime(0.016, now + 0.22);
+  gain.gain.linearRampToValueAtTime(0.001, now + 1.7);
+  osc.connect(gain);
+  gain.connect(musicBus || actx.destination);
+  osc.start(now);
+  osc.stop(now + 1.75);
+}
+
+function getAmbientProfile() {
+  const zone = typeof getRoomZone === 'function' ? getRoomZone(currentRoomId) : 'carmesi';
+  const city = [-2, -1, 0, 9, 10, 31, 32, 33, 34, 35, 36, 37].includes(Number(currentRoomId));
+  if (city) return { transpose: 1, pad: 146.83, tone: 'sine' };
+  if (zone === 'juramento') return { transpose: 0.78, pad: 73.42, tone: 'triangle' };
+  if (zone === 'reloj') return { transpose: 1.12, pad: 110.0, tone: 'sine' };
+  if (zone === 'astral') return { transpose: 1.34, pad: 164.81, tone: 'triangle' };
+  return { transpose: 0.92, pad: 87.31, tone: 'sawtooth' };
 }
 
 function setBgmMode(mode) {
@@ -184,8 +250,10 @@ function setBgmMode(mode) {
 
     const idx = bgmStep % 16;
     if (currentBgmMode === 'explore') {
-      playNote(EXPLORE_MELODY[idx], 'triangle', 0.22, 0.035);
-      playNote(EXPLORE_BASS[idx], 'sawtooth', 0.35, 0.025);
+      const profile = getAmbientProfile();
+      playNote(EXPLORE_MELODY[idx] * profile.transpose, 'triangle', 0.22, 0.035);
+      playNote(EXPLORE_BASS[idx] * profile.transpose, 'sawtooth', 0.35, 0.025);
+      if (idx % 4 === 0) playAmbientPad(profile.pad, profile.tone);
     } else if (currentBgmMode === 'boss') {
       playNote(BOSS_MELODY[idx], 'square', 0.12, 0.035);
       playNote(BOSS_BASS[idx], 'sawtooth', 0.13, 0.04);
@@ -198,3 +266,5 @@ function toggleMute() {
   isMuted = !isMuted;
   return isMuted;
 }
+
+function setAudioVolumes(music, effects) { musicVolume = Number(music); sfxVolume = Number(effects); if (musicBus) musicBus.gain.value = musicVolume; if (sfxBus) sfxBus.gain.value = sfxVolume; }

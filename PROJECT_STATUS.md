@@ -30,10 +30,26 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
   - `tutorial.js`: Modales flotantes de tutoriales.
 - `js/`:
   - `audio.js`: Sintetizador Web Audio API procedural (música y SFX dinámicos).
-  - `rooms.js`: 31 salas conectadas (incluyendo el Hub de 3 zonas de la Villa Refugio: -2, -1, 0).
+  - `rooms.js`: Motor base ligero (~60 líneas) con constantes de mapa, API de zonas y registro maestro `ROOM_DEFS`.
+  - `rooms/`:
+    - `villa.js`: Salas seguras del Hub de la Villa (-2, -1, 0, 31..37), tiendas y diálogos de ciudadanos.
+    - `ash_path.js`: Los 8 tramos artesanales del Sendero de Ceniza (101 a 108).
+    - `fortress.js`: Salas clásicas del castillo (1 a 30), jefe Lord Malakor y santuarios opcionales (601..604).
+    - `expeditions.js`: Generador de 90+ salas exteriores (Catacumbas, Jardines, Observatorio, Fortaleza) con 8 arquetipos rotativos y atajos.
   - `entities.js`: Jugador Alaric, combate, 8 tipos de enemigos, NPCs con diálogo (tecla E) y Jefe Malakor.
-  - `sprites.js`: Motor de renderizado con chroma-key automático y recorte de sprite sheets.
+  - `sprites.js`: Motor base ligero (~90 líneas) que carga imágenes, tilesets y utilidades de Chroma Key.
+  - `sprites/`:
+    - `player.js`: Animaciones y renderizado de Alaric (tajo frontal, pogo downward y dash).
+    - `bestiary.js`: Renderizado de todos los enemigos, NPCs por oficio, Lord Malakor y retratos de diálogo.
+    - `environment.js`: Altares, tiendas, edificios de la ciudad, faroles, adoquines, muros y plataformas.
+    - `atmosphere.js`: Fondos góticos por bioma, clima localizado, niebla, cenizas y viñeta.
   - `main.js`: Bucle fijo a 60 FPS, input, escalado de render y HUD gótico.
+- `img/`:
+  - `portraits/`: Retratos de personajes para tiendas y diálogos (Dario, Elena, Corvus, Boros).
+  - `backgrounds/`: Fondos panorámicos de zonas y biomas (cielo nocturno, catacumbas, observatorio, jardines, villa).
+  - `cinematics/`: Ilustraciones cinemáticas de la intro y el prólogo del cazador.
+  - `environment/`: Edificios de la villa, faroles, tiendas, altares y cabañas.
+  - `tilesets/`: Hojas de tiles de mazmorras y terreno.
 
 ---
 
@@ -52,15 +68,99 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
    - **Alternancia Dinámica de Resolución**:
      - Se puede alternar en tiempo real entre **HD Nítido 960p** y **Retro Pixel 480p** pulsando la tecla **`H`** o desde el menú de pausa (**P / ESC** → Opciones).
 
+4. **Sistema de Guardado y Checkpoints (`localStorage`)**:
+   - Puntos de guardado en los Altares de Sangre (`S`) con tecla `E`, restaurando la vida al 100% y emitiendo pilares de partículas doradas/carmesí.
+   - Sistema de Checkpoint persistente (`lastAltarRoom`, `lastAltarX`, `lastAltarY`): al morir o seleccionar "Reiniciar desde Último Altar", Alaric reaparece en el último altar consagrado con vida completa, conservando toda la Esencia y habilidades acumuladas.
+   - Botón interactivo "💾 Guardar Partida (Progreso Actual)" añadido en la pestaña de Opciones del Grimorio / Menú de Pausa.
+   - Carga dinámica del botón "Continuar" en el menú de inicio que restaura estado de salas, muros rotos, almas, habilidades y misiones.
+
+5. **Expansión y Pulido de Combate / Jefe Lord Malakor**:
+   - **Fases de Combate**:
+     - *Fase 1*: Ráfagas mágicas, embestida sombría veloz y pilares solares.
+     - *Transición a Fase 2 (<= 50% HP)*: Onda expansiva con Screen Shake intenso (`25, 6`), Hitstop dramático (`14 frames`), rugido del Eclipse y despliegue de alas carmesí.
+     - *Fase 2 (Furia del Eclipse)*: Pentarráfagas dispersas, doble embestida con teletransporte a la espalda del jugador, pilares en cadena y lluvia de cometas en picada desde el cielo.
+   - **Telegrafiado de Ataques**:
+     - Indicador `⚠ ¡ALERTA!` sobre la cabeza de Malakor antes de embestidas, ráfagas y cometas.
+     - Vector de trayectoria de embestida trazado en el suelo con línea discontinua carmesí.
+     - Grietas rúnicas incandescentes en el suelo indicando dónde brotarán los pilares de fuego antes de la erupción.
+     - Evasión de niebla espectral (combo breaker) si Malakor recibe 3 golpes seguidos.
+   - **Juiciness / Game Feel de Impacto**:
+     - Freeze frames (Hitstop de 3 a 6 frames) en cada tajo de espada o rebote pogo.
+     - Screen Shake direccional dinámico calibrado por fuerza de impacto.
+     - Partículas de salpicaduras de sangre carmesí (`spawnBloodParticles`) con física de gravedad.
+   - **Victoria y Drops Épicos**:
+     - Derrota con explosión cósmica, soltando el *Corazón del Sol Renacido*, 150 Esencia y 4 Corazones grandes, liberando el cielo y desbloqueando el logro del cazador.
+
+6. **Mecánica Activa de Misiones (`quests.js`)**:
+   - 7 misiones activas (Herencia de la Sangre, Voces del Refugio, Cacería Vesperal, Purga de las Criptas, Llama del Santuario, Ecos en la Roca, El Ocaso del Tirano).
+   - Disparadores en tiempo real vinculados a muertes de enemigos, conversaciones con NPCs, consagración de altares, muros secretos rotos y reliquias recogidas.
+   - Notificaciones y banners flotantes al actualizar o completar misiones.
+   - Pestaña de Misiones interactiva en el Grimorio con barras de progreso animadas, porcentajes y botón interactivo `[✦ RECLAMAR +XX ♦]` para cobrar la Esencia.
+   - Diálogo dinámico de Dario en el bazar reconociendo el cumplimiento de los contratos de cacería.
+
+7. **Diseño de Nuevas Zonas y Puzzles Metroidvania**:
+   - **Muros Escalables (`hasWallJump`)**: Marcas rúnicas de garras en los muros verticales de chimeneas de escalada para guiar los saltos de pared.
+   - **Barreras Sombrías (`hasDash` / `B`)**: En Sala 3 (Galería de los Susurros), barrotes crepitantes de energía púrpura que bloquean el paso normal pero se traspasan limpiamente con el Dash Sombrío.
+   - **Visión Astral (`hasAstralEye` / `*`)**: Catálogo de Corvus ampliado con el *Ojo Astral de Véspera*; en Sala 13 (Escalinata de Cristal) se colocó un precipicio con plataformas etéreas de cristal `*` y un muro secreto `?` que solo se materializan y vuelven sólidas al equipar el Ojo Astral.
+
+8. **Sistema de Diálogo Paginado y Persistente (Tecla E / ESC)**:
+   - **Paginación Inteligente**: Diálogos extensos de supervivientes y guardias se dividen automáticamente en páginas de 2 líneas (`paginateDialogueText`) que encajan perfectamente sin desbordar el marco visual.
+   - **Avance de Diálogo con Tecla `E`**: Si el texto tiene múltiples partes, al pulsar `E` se avanza a la siguiente página con efecto de sonido suave (`sfx('orb')`), indicando `[E] Siguiente ▶ (1/2)`.
+   - **Persistencia sin Temporizador**: Las conversaciones con NPCs no desaparecen solas por tiempo ni al caminar; permanecen activas en pantalla para que el jugador lea cómodamente a su propio ritmo.
+   - **Cierre Rápido y Flexible**: En la última página, presionar `E` cierra la conversación inmediatamente. En cualquier momento, presionar `ESC` también cierra el diálogo sin abrir el menú de pausa.
+9. **Estabilidad al Cambiar de Ventana y Spawns en Umbrales de Puertas**:
+   - **Corrección de Spawn en Sala 01**: La puerta de entrada a la Sala 01 tenía un bloque sólido en el techo (`##` en fila 12) y una coordenada `y: 200` que incrustaba la cabeza del jugador dentro del muro, empujándolo fuera del encuadre. Se abrió el espacio del umbral y se calibró el spawn en suelo firme (`x: 26, y: 218`).
+   - **Enraizamiento Inmediato para NPCs (`snapToGround`)**: Todos los NPCs y enemigos terrestres buscan hacia abajo la cota del suelo sólido o plataforma y apoyan sus pies de forma puramente vertical al cargar la sala, sin alterar coordenadas horizontales ni simular pasos de física.
+   - **Manejo de Foco (`window.blur`, `window.focus`, `visibilitychange`)**: Al alternar de ventana o minimizar la pestaña (Alt+Tab), se liberan todas las teclas retenidas y se protege el acumulador de tiempo contra ráfagas de aceleración (`delta` limitado a 16.6ms).
+
+10. **Modularización Limpia del Motor de Sprites (`js/sprites/`)**:
+    - Se subdividió el monolito de ~1600 líneas `js/sprites.js` en una arquitectura limpia y modular:
+      - `js/sprites.js` (~90 líneas): Carga y precarga de imágenes/tilesets, canvas Chroma Key fuera de pantalla, caché y utilidades de render de matrices.
+      - `js/sprites/player.js`: Paleta, matrices de animación y estados de Alaric (idle, carrera, salto, dash y slash frontal / pogo).
+      - `js/sprites/bestiary.js`: Renderizado de los 8 tipos de enemigos, variantes de aldeanos/guardias según oficio, animaciones de Lord Malakor (fases 1 y 2, alas, telegrafiado y barra) y retratos detallados para cuadros de diálogo.
+      - `js/sprites/environment.js`: Altares de guardado, tiendas, cabañas, faroles, pozos, edificios militares góticos, baldosas de ciudad, muros y plataformas de mazmorra.
+      - `js/sprites/atmosphere.js`: Fondos por bioma, niebla y lluvia por zonas, partículas de ceniza y viñeta de bordes oscuros.
+    - Actualizado `index.html` con la secuencia ordenada de scripts sin alterar compatibilidad ni rendimiento.
+
+11. **Organización y Clasificación de Recursos Gráficos en `img/`**:
+    - Se reclasificaron las 25 imágenes en subcarpetas semánticas dentro de `img/`:
+      - `img/portraits/`: Retratos de personajes para el bazar y diálogos (`boros`, `corvus`, `dario`, `elena`).
+      - `img/backgrounds/`: Fondos panorámicos de biomas (`ambient_skyline`, `fortress_carmesi`, `catacumbas`, `observatorio`, `jardines_reloj`, `village_bg`).
+      - `img/cinematics/`: Escenas de la secuencia de introducción y prólogo (`intro_bg`, `intro_alaric`, `intro_villa`, `intro_plaza`).
+      - `img/environment/`: Sprites de edificios, tiendas, altares, faroles y decoración.
+      - `img/tilesets/`: Tilesets de sillar y pavimentos (`dungeon_tileset`, `village_sheet`).
+    - Actualizadas todas las rutas en `index.html`, `js/sprites.js`, `js/data/merchants.js` y `js/ui/intro.js`.
+
+12. **Diseño Artesanal del Sendero de Ceniza y Variedad en Mazmorras**:
+    - **Sendero de Ceniza (Salas 101 a 108)**: Se eliminó la generación repetitiva y se construyeron 8 mapas artesanales con identidad propia (rutas dobles, templos derruidos, fosos para saltos con Dash, Altar del Caminante y portal monumental a las catacumbas).
+    - **Variedad en Mazmorras de Expedición (`makeExpeditionMap`)**: Se sustituyó el generador plano por un motor de 8 arquetipos arquitectónicos rotativos (pasarelas dobles, saltos en zigzag, fosos con islas, baluartes y acueductos) aplicados a Catacumbas (201-224), Jardines (401-424), Observatorio (501-524) y Fortaleza (1001-1020), eliminando la repetición en todo el juego.
+
+13. **Modularización Limpia del Sistema de Habitaciones (`js/rooms/`)**:
+    - Se subdividió el monolito de ~1400 líneas `js/rooms.js` en una arquitectura limpia y modular de 4 submódulos:
+      - `js/rooms.js` (~60 líneas): Constantes de pantalla y tilemap, API de zonas (`getRoomZone`), etiquetas de mapa y helpers de puertas (`openGroundDoor`, `openUpperDoor`).
+      - `js/rooms/villa.js`: Salas del Hub urbano de Villa Refugio (-2, -1, 0, 31..37), comercios y diálogos de ciudadanos/guardias.
+      - `js/rooms/ash_path.js`: Los 8 tramos artesanales del Sendero de Ceniza (101 a 108).
+      - `js/rooms/fortress.js`: Salas clásicas del castillo (1 a 30), sala del Jefe Lord Malakor (5) y santuarios opcionales (601..604).
+      - `js/rooms/expeditions.js`: Motor generador de expediciones (Catacumbas, Jardines, Observatorio, Fortaleza) con 8 arquetipos rotativos, rutas de acceso (41..55) y atajos físicos bidireccionales.
+    - Se verificó la inicialización completa de las 159 salas del juego en orden estricto de dependencias en `index.html`.
+
+14. **Modularización Arquitectónica de Entidades (`js/entities/`)**:
+    - Se refactorizó el archivo más pesado del juego (`js/entities.js`, originalmente 2.034 líneas) dividiéndolo en 4 submódulos limpios, desacoplados y con responsabilidades únicas:
+      - `js/entities/physics.js` (177 líneas): Detección AABB, verificación de colisión de tiles (`#`, `?`, `B`), `moveWithCollisions`, `snapToGround`, cálculo de daño, screen shake, hit-stop y partículas de sangre/chispas.
+      - `js/entities/player.js` (812 líneas): Definición del objeto `player` (Alaric) y bucle de control `updatePlayer` (máquina de estados, salto, doble salto, wall-slide, wall-jump, dash con frames de invencibilidad, pogo-slash aéreo, ataques con espada, hechizos arcanos, ruptura de muros frágiles, interacción con altares y recolección de reliquias).
+      - `js/entities/enemies.js` (609 líneas): Lógica `updateEnemies` y `defeatEnemyFromStatus` para los 8 arquetipos de enemigos, ciudadanos y guardias con IA de patrulla, combate y teletransporte del Jefe Lord Malakor (2 fases, pilares de sangre, telegrafiado de ataques), proyectiles, orbes de esencia magnéticos y textos de daño flotante.
+      - `js/entities.js` (438 líneas): Estado global del mundo (`currentRoomId`, `materials`, `seals`, `storyProgress`), datos y memorias de jefes, banners de texto y diálogos con paginación, guardado en `localStorage` y la función central `loadRoom`.
+    - Integrado en `index.html` y validado al 100% mediante suite de tests en Node.js VM.
+
 ---
 
 ## 3. Controles Principales del Juego
 - **A / D** o **Flechas Izquierda / Derecha**: Moverse
-- **W / Espacio / Flecha Arriba**: Saltar (Doble salto si se tiene la reliquia)
-- **J / Clic Izquierdo**: Atacar con la espada
-- **K / Clic Derecho / Shift**: Dash sombrío
-- **E**: Interactuar (hablar con aldeanos/guardias, abrir tienda de Dario, leer carteles)
-- **P / ESC**: Menú de pausa (Mapa grande, Diario de Reliquias, Bestiario, Misiones, Opciones)
+- **W / Espacio / Flecha Arriba**: Saltar (Doble salto si se tiene la reliquia / Salto en pared pegado al muro)
+- **J / Clic Izquierdo**: Atacar con la espada (Pogo jump si se ataca hacia abajo en el aire)
+- **K / Clic Derecho / Shift**: Dash sombrío (atraviesa enemigos y barreras sombrías B)
+- **E**: Interactuar (hablar con aldeanos/guardias, abrir tiendas, consagrar altar y guardar partida)
+- **P / ESC**: Menú de pausa / Grimorio (Mapa grande, Reliquias, Misiones interactivas con reclamo de recompensas, Bestiario, Opciones)
 - **H**: Alternar Modo Gráfico (HD Nítido 960p vs Retro Pixel 480p)
 - **O**: Silenciar / Activar Música
 
@@ -68,4 +168,4 @@ Este documento sirve como resumen ejecutivo y transferencia de contexto (Handoff
 
 ## 4. Estado del Repositorio Git
 - Inicializado localmente en la rama `main`.
-- Commit inicial realizado con todos los archivos tracked.
+- Todos los sistemas implementados, probados y con validación de sintaxis 100% limpia.

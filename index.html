@@ -33,7 +33,7 @@
 
     <!-- NUEVO: PANTALLA DE INTRODUCCIÓN Y CINEMÁTICA CON DIÁLOGO -->
     <div id="intro-screen" class="hidden">
-      <div class="intro-bg" style="background-image: url('images/intro_bg.jpg');"></div>
+      <div class="intro-bg" style="background-image: url('img/cinematics/intro_bg.jpg');"></div>
       <div class="intro-vignette"></div>
       
       <div class="intro-dialog-box">
@@ -49,7 +49,7 @@
     <!-- NUEVO: TIENDA DEL MERCADER DARIO (RPG HUB) -->
     <div id="shop-modal" class="hidden">
       <div class="shop-container">
-        <div class="shop-portrait" style="background-image: url('images/dario_portrait.jpg');"></div>
+        <div class="shop-portrait" style="background-image: url('img/portraits/dario_portrait.jpg');"></div>
         <div class="shop-content">
           <div class="shop-header">
             <h3>DARIO EL TUERTO — BAZAR DEL REFUGIO</h3>
@@ -117,7 +117,7 @@
             <div id="map-room-tooltip" class="map-room-tooltip" role="status" aria-live="polite"></div>
           </div>
           <p class="map-legend-notes">
-            ◆ Actual &nbsp;|&nbsp; ⚡ Altar &nbsp;|&nbsp; 🔮 Reliquia &nbsp;|&nbsp; 👑 Jefe &nbsp;|&nbsp; ⛓ Ruta bloqueada &nbsp;|&nbsp; ? Sin descubrir
+            ◆ Actual &nbsp;|&nbsp; ◇ Objetivo &nbsp;|&nbsp; ⚡ Altar &nbsp;|&nbsp; 🔮 Reliquia &nbsp;|&nbsp; 👑 Jefe &nbsp;|&nbsp; D Dash &nbsp;|&nbsp; 2J Doble Salto &nbsp;|&nbsp; G Garras
           </p>
         </div>
 
@@ -175,8 +175,25 @@
           </div>
           <div class="options-actions">
             <button id="btn-resume">▶ Reanudar Partida (ESC / P)</button>
+            <button id="btn-save-game">💾 Guardar Partida (Progreso Actual)</button>
             <button id="btn-toggle-sound">🔊 Alternar Sonido / Música (O)</button>
             <button id="btn-toggle-graphics">🖥️ Modo Gráfico: HD Nítido 960p (H)</button>
+            <button id="btn-toggle-objective">✦ Marcador de objetivo: ACTIVADO</button>
+            <label>Música <input id="music-volume" type="range" min="0" max="1" step="0.05" value="0.7"></label>
+            <label>Efectos <input id="sfx-volume" type="range" min="0" max="1" step="0.05" value="0.8"></label>
+            <button id="btn-rebind-jump">⌨️ Reasignar salto: ESPACIO</button>
+            <button id="btn-rebind-dash">⌨️ Reasignar dash: SHIFT</button>
+            <button id="btn-rebind-attack">⌨️ Reasignar ataque: CLIC</button>
+            <button id="btn-rebind-left">⌨️ Movimiento izquierda: A</button>
+            <button id="btn-rebind-right">⌨️ Movimiento derecha: D</button>
+            <button id="btn-rebind-down">⌨️ Agacharse: S</button>
+            <button id="btn-rebind-cast">⌨️ Hechizo: Q</button>
+            <button id="btn-rebind-hook">⌨️ Gancho: F</button>
+            <button id="btn-rebind-interact">⌨️ Interactuar: E</button>
+            <button id="btn-rebind-travel">⌨️ Viaje rápido: T</button>
+            <label>Dificultad <select id="difficulty-select"><option value="story">Historia</option><option value="normal" selected>Normal</option><option value="nightmare">Eclipse</option></select></label>
+            <label><input id="toggle-shake" type="checkbox" checked> Vibración de pantalla</label>
+            <label><input id="toggle-flashes" type="checkbox" checked> Destellos intensos</label>
             <button id="btn-restart" class="danger">💀 Reiniciar desde Último Altar</button>
           </div>
         </div>
@@ -199,8 +216,19 @@
   <!-- Motor del juego -->
   <script src="js/audio.js"></script>
   <script src="js/rooms.js"></script>
+  <script src="js/rooms/villa.js"></script>
+  <script src="js/rooms/fortress.js"></script>
+  <script src="js/rooms/ash_path.js"></script>
+  <script src="js/rooms/expeditions.js"></script>
   <script src="js/entities.js"></script>
+  <script src="js/entities/physics.js"></script>
+  <script src="js/entities/player.js"></script>
+  <script src="js/entities/enemies.js"></script>
   <script src="js/sprites.js"></script>
+  <script src="js/sprites/player.js"></script>
+  <script src="js/sprites/bestiary.js"></script>
+  <script src="js/sprites/environment.js"></script>
+  <script src="js/sprites/atmosphere.js"></script>
 
   <!-- Módulos de interfaz -->
   <script src="js/ui/tutorial.js"></script>

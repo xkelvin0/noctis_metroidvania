@@ -77,6 +77,18 @@ const RELICS_DATA = [
   }
 ];
 
+const MINOR_RELICS_DATA = [
+  { key: 'hasBloodFang', id: 'blood_fang', name: 'Colmillo de la Herida', icon: '🩸', color: '#ff4d6d', desc: 'Amuleto menor: tus golpes pueden causar sangrado.' },
+  { key: 'hasShadeThread', id: 'shade_thread', name: 'Hilo de Sombra', icon: '🕯️', color: '#c77dff', desc: 'Amuleto menor: el dash se recupera antes.' },
+  { key: 'hasStarWard', id: 'star_ward', name: 'Vigilia Estelar', icon: '✦', color: '#7de2ff', desc: 'Amuleto menor: reduce el daño recibido.' }
+];
+
+const MAGIC_TREE_DATA = [
+  { id: 'blood', icon: '🩸', name: 'Sangre', color: '#ff4d6d', desc: 'Aumenta sangrado y poder de impacto.' },
+  { id: 'shadow', icon: '🌑', name: 'Sombra', color: '#c77dff', desc: 'Mejora movilidad y recuperación de dash.' },
+  { id: 'astro', icon: '✦', name: 'Astro', color: '#7de2ff', desc: 'Potencia hechizos y control astral.' }
+];
+
 const TUTORIALS_DATA = {
   dash: {
     badge: '⚡',

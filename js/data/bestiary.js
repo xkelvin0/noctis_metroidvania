@@ -102,5 +102,21 @@ const BESTIARY_DATA = [
     hp: 260, dmg: 25, essence: '20 Orbes (100 ♦)',
     desc: 'Hermano de Alaric y señor caído del reino. Detuvo el amanecer para desafiar a la muerte, convirtiéndose en el epicentro de la pesadilla.',
     weakness: 'En Fase 1, castígalo entre sus pilares solares con Lanzas de Sangre. En Fase 2 (Alas de Sangre), usa el rebote Pogo sobre sus esferas y la <strong>Forma de Bruma</strong> para eludir su lluvia de meteoros.'
+  },
+  {
+    id: 'duelist', name: 'Duelista de Sal', icon: '⚔️', title: 'Espada del Juramento Roto', habitat: 'Catacumbas del Juramento', hp: 45, dmg: 15, essence: '4 Orbes (20 ♦)',
+    desc: 'Un espadachín que anuncia su estocada antes de cruzar la arena a toda velocidad.', weakness: 'Esquiva su línea dorada, espera el final de la embestida y ataca por la espalda.'
+  },
+  {
+    id: 'trapper', name: 'Invocador de Trampas', icon: '🟠', title: 'Tejedor Rúnico', habitat: 'Catacumbas y fortaleza', hp: 45, dmg: 22, essence: '4 Orbes (20 ♦)',
+    desc: 'Deja runas explosivas inmóviles que bloquean los caminos seguros.', weakness: 'No pises la runa: destruye al invocador desde una plataforma o usa el Dash para cruzar la zona.'
+  },
+  {
+    id: 'beast', name: 'Bestia de Carga', icon: '🐗', title: 'Ariete Marchito', habitat: 'Jardines del Reloj Muerto', hp: 80, dmg: 25, essence: '6 Orbes (30 ♦)',
+    desc: 'Una criatura blindada que embiste cuando prepara sus patas contra el suelo.', weakness: 'Salta o usa Doble Salto durante la carga; queda expuesta cuando termina su recorrido.'
+  },
+  {
+    id: 'specter', name: 'Espectro de Cristal', icon: '👻', title: 'Voz sin Cuerpo', habitat: 'Observatorio Quebrado', hp: 45, dmg: 18, essence: '4 Orbes (20 ♦)',
+    desc: 'Cruza paredes y dispara una aguja espectral desde posiciones imposibles.', weakness: 'Un Parry devuelve su aguja; no dependas de muros para cubrirte.'
   }
 ];

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Noctis — Atlas de Véspera</title>
+  <script src="js/rooms.js"></script>
+  <style>
+    :root{--bg:#08050d;--panel:#120b1a;--ink:#f6eafa;--mute:#ae92bc;--gold:#ffbe0b;--line:#59366a;--pink:#ff3d76}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(ellipse at 50% -15%,#2c1135 0%,#0b0710 40%,#050307 100%);color:var(--ink);font:15px/1.35 Inter,Segoe UI,Arial,sans-serif;min-height:100vh}
+    header{position:sticky;top:0;z-index:3;background:rgba(8,5,13,.94);backdrop-filter:blur(10px);border-bottom:1px solid #5d294f;padding:18px 4vw 15px;box-shadow:0 8px 28px #0008}
+    h1{font:700 clamp(23px,3vw,37px)/1 Georgia,serif;letter-spacing:3px;text-align:center;color:var(--gold);margin:0;text-shadow:0 0 18px #f05b3c66}.sub{text-align:center;color:var(--mute);margin:5px 0 13px}.legend{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.chip{font:12px ui-monospace,monospace;padding:5px 9px;border:1px solid #65406e;background:#180d21;color:#ded0e7}.chip b{color:var(--gold)}
+    main{max-width:1540px;margin:auto;padding:26px 28px 70px}.alert{max-width:1040px;margin:0 auto 25px;padding:12px 15px;border-left:4px solid var(--gold);background:#21170d;color:#ffe4a3}.overview{display:grid;grid-template-columns:1fr 270px;gap:20px;margin-bottom:25px}.route-card,.detail{background:linear-gradient(145deg,#170c20,#0d0913);border:1px solid #57315f;box-shadow:0 10px 26px #0006}.route-card{padding:15px 18px}.route-card h2,.detail h2{font:700 19px Georgia,serif;color:#ffcf62;margin:0 0 7px}.route-card p{color:#cdbbd6;margin:0}.path{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:11px}.path span{padding:5px 7px;border:1px solid #73447a;background:#22132a;font-size:12px}.path i{color:var(--gold);font-style:normal;font-size:20px}.detail{padding:15px;position:sticky;top:116px;height:max-content}.detail p{color:#d4c1da;margin:5px 0}.detail .hint{color:#8b7297;font-size:13px}.detail .doors{margin-top:12px;font:12px ui-monospace,monospace;color:#93e4dd;white-space:pre-line}
+    #atlas{display:grid;gap:22px}.region{border:1px solid var(--region);background:linear-gradient(125deg,color-mix(in srgb,var(--region) 10%,#100916),#0b0710 58%);box-shadow:0 14px 32px #0008}.region-head{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:13px 16px;border-bottom:1px solid color-mix(in srgb,var(--region) 55%,transparent)}.region-title{font:700 23px Georgia,serif;color:var(--region);margin:0}.region-meta{font:12px ui-monospace,monospace;color:#cdb7d7;text-align:right}.grid{padding:17px;display:flex;align-items:center;gap:9px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-color:var(--region) #100916;scrollbar-width:thin}.grid::after{content:'FIN';font:10px ui-monospace,monospace;color:#9c81a8;padding:0 10px}.room{flex:0 0 174px;min-height:98px;text-align:left;cursor:pointer;border:1px solid #4e3657;border-left:4px solid var(--region);background:linear-gradient(145deg,#23142d,#110b17);padding:9px;transition:.16s transform,.16s border-color,.16s background;color:var(--ink)}.room-link{flex:0 0 auto;color:var(--region);font:700 20px ui-monospace,monospace;text-shadow:0 0 10px color-mix(in srgb,var(--region) 65%,transparent)}.room:hover,.room.active{transform:translateY(-3px);border-color:#fff;background:linear-gradient(145deg,#392044,#160d20);box-shadow:0 7px 14px #0009}.code{font:700 11px ui-monospace,monospace;color:var(--region);display:flex;justify-content:space-between}.icons{letter-spacing:2px;color:#ffcf62}.room strong{display:block;font:700 14px/1.18 Georgia,serif;margin:5px 0 3px}.room small{display:block;color:#bba5c4;font-size:11px;line-height:1.2}.connector{padding:0 15px 14px;color:#d9c4df;font-size:12px}.connector b{color:var(--gold)}
+    .backtop{position:fixed;right:20px;bottom:18px;border:1px solid var(--gold);background:#1e1020;color:var(--gold);padding:9px 12px;cursor:pointer}.backtop:hover{background:#38203c}@media(max-width:980px){.overview{grid-template-columns:1fr}.detail{position:static}.grid{grid-template-columns:repeat(auto-fill,minmax(125px,1fr))}}@media(max-width:560px){main{padding:18px 12px 55px}.grid{padding:9px;gap:7px;grid-template-columns:repeat(2,minmax(0,1fr))}.room{min-height:80px}.region-title{font-size:19px}}
+    .world-map{overflow-x:auto;padding:18px;background:radial-gradient(circle at 33% 28%,#54236355 0 2px,transparent 3px),linear-gradient(145deg,#170c20,#0d0913);background-size:40px 40px,auto;scrollbar-color:#ffbe0b #100916;scrollbar-width:thin}.world-track{min-width:1390px;display:flex;align-items:center;gap:12px}.macro{width:178px;min-height:104px;padding:11px;border:1px solid var(--node);border-top:5px solid var(--node);background:#130b1be8;box-shadow:0 6px 14px #0008}.macro h3{margin:0;font:700 17px Georgia,serif;color:var(--node)}.macro p{margin:5px 0 0;color:#d9c5df;font-size:12px;line-height:1.16}.macro .exit{color:#ffcf62;font:11px ui-monospace,monospace}.m-villa{--node:#e0aaff}.m-jardines{--node:#e6b65e}.m-sendero{--node:#d7a6ef}.m-enclave{--node:#72d6cd}.m-cat{--node:#65d8cf}.m-santuario{--node:#83d7ff}.m-observatorio{--node:#83d7ff}.m-fortaleza{--node:#ff4d7d}.edge{color:#ffcf62;font:700 19px ui-monospace,monospace;text-align:center;text-shadow:0 0 12px #ffbe0b99;white-space:nowrap}.edge small{display:block;font-size:10px;color:#c8acd6}
+  </style>
+</head>
+<body>
+<header>
+  <h1>ATLAS DE VÉSPERA</h1>
+  <p class="sub">Mapa sala por sala · pulsa una sala para leer sus conexiones reales.</p>
+  <div class="legend"><span class="chip"><b>⚡</b> altar</span><span class="chip"><b>🔮</b> reliquia</span><span class="chip"><b>♛</b> jefe</span><span class="chip"><b>☠</b> élite</span><span class="chip"><b>✦</b> opcional</span><span class="chip">Las líneas y puertas se leen al seleccionar una sala.</span></div>
+</header>
+<main>
+  <div class="alert"><b>Ruta principal — siempre avanza a la derecha:</b> Villa → Sendero → Enclave → Catacumbas → vuelve a Villa → salida alta derecha (Doble Salto) → Jardines → Santuario → Observatorio → Fortaleza. Desplaza cada franja horizontal para leer todas las salas.</div>
+  <section class="overview">
+    <div class="world-map" aria-label="Mapa posicionado del mundo">
+      <div class="world-track">
+        <article class="macro m-villa"><h3>01 · Villa Refugio</h3><p>Mercado, altar y forja.</p><p class="exit">Salida baja derecha: Sendero</p></article>
+        <div class="edge">→</div>
+        <article class="macro m-sendero"><h3>02 · Sendero de Ceniza</h3><p>8 salas de viaje.</p><p class="exit">Ramal alto: Fortaleza (3 sellos)</p></article>
+        <div class="edge">→</div>
+        <article class="macro m-enclave"><h3>03 · Enclave</h3><p>Alquimia y túneles.</p><p class="exit">Salida alta derecha: Catacumbas</p></article>
+        <div class="edge">→</div>
+        <article class="macro m-cat"><h3>04 · Catacumbas</h3><p>Abadesa · Doble Salto.</p><p class="exit">Consigue la Pluma del Cuervo</p></article>
+        <div class="edge">↩<small>viaje rápido / regreso</small></div>
+        <article class="macro m-villa"><h3>05 · Villa Refugio</h3><p>Vuelve al puesto de muralla.</p><p class="exit">Salida alta derecha: Doble Salto</p></article>
+        <div class="edge">→</div>
+        <article class="macro m-jardines"><h3>06 · Jardines del Reloj</h3><p>30 salas · Garras.</p><p class="exit">Camino entero hacia la derecha</p></article>
+        <div class="edge">→</div>
+        <article class="macro m-santuario"><h3>07 · Santuario Astral</h3><p>Reliquiario y biblioteca.</p><p class="exit">Puentes hacia Observatorio</p></article>
+        <div class="edge">→</div>
+        <article class="macro m-observatorio"><h3>08 · Observatorio</h3><p>Serafín de Cristal.</p><p class="exit">Tercer sello exterior</p></article>
+        <div class="edge">→</div>
+        <article class="macro m-fortaleza"><h3>09 · Fortaleza Carmesí</h3><p>30 salas · Malakor.</p><p class="exit">Final: requiere 4 sellos</p></article>
+      </div>
+    </div>
+    <aside class="detail" id="detail"><h2>Selecciona una sala</h2><p class="hint">Aquí verás el nombre completo, los puntos de interés y las puertas que salen de esa sala.</p></aside>
+  </section>
+  <section id="atlas"></section>
+</main>
+<button class="backtop" onclick="scrollTo({top:0,behavior:'smooth'})">↑ Arriba</button>
+<script>
+  const regionDefs = [
+    {id:'villa',name:'Villa Refugio',color:'#e0aaff',ids:[33,32,31,-2,-1,0],note:'Centro seguro. La salida principal y la salida alta de Jardines están a la derecha.'},
+    {id:'ceniza',name:'Sendero de Ceniza',color:'#d7a6ef',ids:range(101,108),note:'Conecta la Villa con el Enclave. El primer tramo tiene ramal superior hacia Fortaleza con 3 sellos.'},
+    {id:'enclave',name:'Enclave Subterráneo',color:'#72d6cd',ids:[9,34,35,41,42,43,44,45],note:'Ciudad subterránea. Con Dash, toma la salida alta derecha hacia las Catacumbas.'},
+    {id:'juramento',name:'Catacumbas del Juramento',color:'#65d8cf',ids:[...range(201,224),11,18,19,20,28,12,601],note:'30 salas, Abadesa Ahogada, secretos y Cámara de las Últimas Palabras.'},
+    {id:'reloj',name:'Jardines del Reloj Muerto',color:'#e6b65e',ids:[46,47,48,49,50,15,...range(401,424),24,25,26,30,16,602],note:'Ruta de Doble Salto: entra por la salida alta derecha de Villa y avanza hacia la derecha.'},
+    {id:'astral',name:'Santuario y Observatorio',color:'#83d7ff',ids:[10,36,37,51,52,53,54,55,...range(501,524),13,21,22,23,29,14,603],note:'Ruta de Garras y escalada. Incluye Archivo de la Estrella Caída.'},
+    {id:'carmesi',name:'Fortaleza Carmesí',color:'#ff4d7d',ids:[1,...range(1001,1020),2,3,6,7,4,8,27,17,5,604],note:'Fortaleza final: acceso superior desde Sendero de Ceniza 01 con 3 Sellos; Malakor exige 4.'}
+  ];
+  function range(a,b){return Array.from({length:b-a+1},(_,i)=>a+i)}
+  function title(room){return room.name.replace(/^.*?—\s*/,'').replace(/^.*?:\s*/, '')}
+  function icons(room){const all=room.spawns||[];let out='';if(room.map.some(row=>row.includes('S')))out+='⚡';if(all.some(s=>String(s.type).startsWith('relic')||String(s.type).startsWith('minor')))out+='🔮';if(all.some(s=>s.type==='boss'))out+='♛';if(all.some(s=>s.elite))out+='☠';if(room.optionalKind)out+='✦';return out||'·'}
+  function doorText(room){const entries=Object.entries(room.doors||{});if(!entries.length)return 'Sin salida registrada';return entries.map(([side,d])=>{const to=ROOM_DEFS[d.to];let req=d.requiresAllSeals?' · REQUIERE 4 SELLOS':d.requiresSealCount?` · REQUIERE ${d.requiresSealCount} SELLOS`:d.requiresAbility?` · REQUIERE ${d.requiresLabel}`:d.shortcut?' · ATAJO':' ';return `${side.toUpperCase()}  →  ${to ? (to.mapLabel||to.name) : d.to}${req}`}).join('\n')}
+  const atlas=document.querySelector('#atlas'),detail=document.querySelector('#detail');
+  regionDefs.forEach(region=>{const rooms=region.ids.map(id=>[id,ROOM_DEFS[id]]).filter(([,room])=>room);const sec=document.createElement('section');sec.className='region';sec.style.setProperty('--region',region.color);sec.innerHTML=`<div class="region-head"><h2 class="region-title">${region.name}</h2><div class="region-meta">${rooms.length} salas<br>${region.note}</div></div><div class="grid"></div>`;const grid=sec.querySelector('.grid');rooms.forEach(([id,room])=>{const button=document.createElement('button');button.className='room';button.innerHTML=`<span class="code"><span>${room.mapLabel||'#'+id}</span><span class="icons">${icons(room)}</span></span><strong>${title(room)}</strong><small>ID ${id}${room.optionalKind?' · opcional':''}</small>`;button.onclick=()=>{document.querySelectorAll('.room.active').forEach(x=>x.classList.remove('active'));button.classList.add('active');detail.innerHTML=`<h2 style="color:${region.color}">${room.mapLabel||'#'+id} — ${title(room)}</h2><p><b>Región:</b> ${region.name}</p><p>${room.optionalKind==='lore'?'Sala opcional de lore.':room.optionalKind==='elite'?'Arena élite opcional.':'Sala de exploración / progreso.'}</p><p><b>Puntos:</b> ${icons(room).split('').join(' ')}</p><div class="doors"><b>PUERTAS Y CONEXIONES</b>\n${doorText(room)}</div>`;detail.scrollIntoView({behavior:'smooth',block:'nearest'});};grid.appendChild(button)});atlas.appendChild(sec)});
+</script>
+</body>
+</html>

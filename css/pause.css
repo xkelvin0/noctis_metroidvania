@@ -285,12 +285,46 @@
 
 /* --- Misiones y Memorias --- */
 .quests-grid, .memories-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; overflow-y: auto; }
-.quests-grid { max-height: 145px; margin-bottom: 10px; }
-.quest-card, .memory-card { background: #140d22; border: 1px solid #3d2354; border-radius: 6px; padding: 10px; }
-.quest-card.completed, .memory-card.unlocked { border-color: #ffbe0b; background: #21152c; }
-.quest-card h4, .memory-card h4 { color: #ffccd5; font-size: 11px; margin-bottom: 4px; }
-.quest-card p, .memory-card p { color: #9e8fb2; font-size: 9px; line-height: 1.35; }
-.quest-progress { color: #ffbe0b; font-size: 9px; margin-top: 6px; }
+.quests-grid { max-height: 220px; margin-bottom: 12px; }
+.quest-card, .memory-card { 
+  background: #140d22; 
+  border: 1px solid #3d2354; 
+  border-radius: 6px; 
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+.quest-card:hover { border-color: #7209b7; background: #1a102e; }
+.quest-card.completed { border-color: #ffbe0b; background: #21152c; box-shadow: 0 0 10px rgba(255, 190, 11, 0.15); }
+.quest-card.claimed { border-color: #00f5d4; background: #111e22; opacity: 0.85; }
+.quest-header { display: flex; align-items: center; justify-content: space-between; }
+.quest-card h4, .memory-card h4 { color: #ffccd5; font-size: 11.5px; margin: 0; font-family: 'Cinzel', serif; font-weight: 700; }
+.quest-card p, .memory-card p { color: #9e8fb2; font-size: 9.5px; line-height: 1.35; margin: 0; }
+.quest-progress-container { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.quest-bar-bg { flex: 1; height: 6px; background: #0c0814; border: 1px solid #3d2354; border-radius: 3px; overflow: hidden; }
+.quest-bar-fill { height: 100%; background: linear-gradient(90deg, #ff0055, #ffbe0b); transition: width 0.3s ease; }
+.quest-card.claimed .quest-bar-fill { background: #00f5d4; }
+.quest-ratio { font-size: 10px; color: #ffbe0b; font-family: 'VT323', monospace; }
+.quest-card.claimed .quest-ratio { color: #00f5d4; }
+.quest-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.quest-reward-tag { font-size: 9.5px; color: #ff007f; font-weight: bold; }
+.quest-claim-btn {
+  background: linear-gradient(135deg, #ffbe0b, #fb5607);
+  color: #0c0814;
+  border: none;
+  font-family: 'VT323', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(255, 190, 11, 0.5);
+  transition: transform 0.15s ease;
+}
+.quest-claim-btn:hover { transform: scale(1.06); }
+.quest-claimed-badge { font-size: 10px; color: #00f5d4; font-family: 'VT323', monospace; }
 .memory-card.locked { opacity: .45; filter: grayscale(.8); }
 
 /* --- Bestiario --- */
